@@ -354,11 +354,11 @@ def converter_texto_sap_para_dataframe(texto):
 
 def criar_tabela_consumo_diario():
     conn = psycopg2.connect(
-        host="localhost",
-        port="5432",
-        database="postgres",
-        user="postgres",
-        password="root",
+        host="DB_HOST",
+        port="DB_PORT",
+        database="DB_USER",
+        user="DB_USER",
+        password="DB_PASSWORD",
     )
 
     cursor = conn.cursor()
@@ -845,8 +845,12 @@ def main(argv: Optional[list] = None):
         arquivo_excel = "erros_digitacao.xlsx"
 
         # Caminho 2: Sua pasta do OneDrive (com o 'r' na frente para aceitar as barras)
-        arquivo_onedrive = r"C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx"
-        arquivo_excel = arquivo_onedrive
+        caminho_base = os.path.expanduser("~")
+        
+        arquivo_onedrive = os.path.join(
+        caminho_base,
+        r"OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
+        )
 
         # Apenas possíveis erros de digitação
         df_novos = df_anomalias[df_anomalias["possivel_erro_digitacao"]].copy()

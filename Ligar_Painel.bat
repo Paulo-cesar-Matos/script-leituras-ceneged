@@ -49,9 +49,9 @@ if not exist ".env" (
 )
 
 :: 4. INICIA O SISTEMA
-echo ?? Iniciando o robo e o painel...
+echo Iniciando o robo e o painel...
 
-:: Inicia o robô do SAP minimizado
+:: Inicia o robo do SAP minimizado
 start /MIN python extrair_leituras.py
 
 :: Inicia o servidor do painel na porta 9000
