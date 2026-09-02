@@ -3,7 +3,7 @@ import time
 import sys
 import subprocess
 from typing import Optional, Iterable
-import win32com.client  
+import win32com.client
 import pyperclip
 import pandas as pd
 import psycopg2
@@ -18,39 +18,50 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ========= CONFIG =========
-CONNECTION_NAME   = "SISTEMA DE LEITURAS"
-USERNAME          = os.getenv("SAP_USER_1")
-PASSWORD          = os.getenv("SAP_PASSWORD_1")
-SESSION_INDEX     = 0
-TARGET_NODE_ID    = "F00009"
+CONNECTION_NAME = "SISTEMA DE LEITURAS"
+USERNAME = os.getenv("SAP_USER_1")
+PASSWORD = os.getenv("SAP_PASSWORD_1")
+SESSION_INDEX = 0
+TARGET_NODE_ID = "F00009"
 
-SAP_LOGON_PATH    = r"C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"
+SAP_LOGON_PATH = r"C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"
 
-INSTALL_FIELD_ID  = "wnd[0]/usr/ctxtEANLD-ANLAGE"
-TREE_PATH         = "wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell"
+INSTALL_FIELD_ID = "wnd[0]/usr/ctxtEANLD-ANLAGE"
+TREE_PATH = "wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell"
 # ==========================
 
 # ========= CONFIG  BD =========
-DB_USER     = os.getenv("DB_USER")
+DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST     = os.getenv("DB_HOST")
-DB_PORT     = os.getenv("DB_PORT")
-DB_NAME     = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
 # ==========================
+
 
 def encerrar_sap():
     try:
         print("🧹 Encerrando SAP...")
-        subprocess.run(["taskkill", "/F", "/IM", "saplogon.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(["taskkill", "/F", "/IM", "sapgui.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            ["taskkill", "/F", "/IM", "saplogon.exe"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.run(
+            ["taskkill", "/F", "/IM", "sapgui.exe"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         print("✅ SAP encerrado.")
     except Exception as e:
         print(f"⚠️ Falha ao encerrar SAP: {e}")
+
 
 def abrir_sap_logon():
     print("🚀 AI - Análise de Erros iniciada...")
     subprocess.Popen(SAP_LOGON_PATH)
     time.sleep(1)
+
 
 def _children(obj) -> Iterable:
     try:
@@ -61,6 +72,7 @@ def _children(obj) -> Iterable:
         except Exception:
             return []
 
+
 def _children_count(obj) -> int:
     try:
         return obj.Children.Count
@@ -70,11 +82,13 @@ def _children_count(obj) -> int:
         except Exception:
             return 0
 
+
 def _child(obj, idx: int):
     try:
         return obj.Children(idx)
     except Exception:
         return obj.Children.Item(idx)
+
 
 def _safe_attr(obj, name, default=None):
     try:
@@ -82,20 +96,24 @@ def _safe_attr(obj, name, default=None):
     except Exception:
         return default
 
+
 def get_application():
     sap_gui_auto = win32com.client.GetObject("SAPGUI")
     try:
         app = sap_gui_auto.GetScriptingEngine
-        if app: return app
+        if app:
+            return app
     except Exception:
         pass
     try:
         app = sap_gui_auto.GetScriptingEngine()
-        if app: return app
+        if app:
+            return app
     except Exception:
         pass
     ctrl = win32com.client.gencache.EnsureDispatch("Sapgui.ScriptingCtrl.1")
     return _safe_attr(ctrl, "Application", ctrl)
+
 
 def open_connection_by_name(app, name: str):
     try:
@@ -103,12 +121,14 @@ def open_connection_by_name(app, name: str):
     except Exception:
         return app.OpenConnectionByConnectionString(name, True)
 
+
 def get_session_after_open(conn) -> object:
     for _ in range(30):
         if _children_count(conn) > 0:
             return _child(conn, SESSION_INDEX)
         time.sleep(0.5)
     raise RuntimeError("A sessão não ficou disponível após abrir a conexão.")
+
 
 # Função principal para login e abertura da instalação
 def login_and_open_instalacao(user: str, pwd: str):
@@ -147,61 +167,49 @@ def login_and_open_instalacao(user: str, pwd: str):
 
     return session
 
+
 def abrir_relatorio_leituras(session):
     tree = session.findById(
-        "wnd[0]/usr/cntlIMAGE_CONTAINER/"
-        "shellcont/shell/shellcont[0]/shell"
+        "wnd[0]/usr/cntlIMAGE_CONTAINER/" "shellcont/shell/shellcont[0]/shell"
     )
 
     tree.selectedNode = "F00006"
     tree.doubleClickNode("F00006")
 
-    session.findById(
-        "wnd[0]/usr/ctxtP_REPORT"
-    ).text = (
-        "AQA0SYSTQV000009LEITURAS======"
-    )
+    session.findById("wnd[0]/usr/ctxtP_REPORT").text = "AQA0SYSTQV000009LEITURAS======"
 
-    session.findById(
-        "wnd[0]/tbar[1]/btn[8]"
-    ).press()
+    session.findById("wnd[0]/tbar[1]/btn[8]").press()
 
     # ⏱️ PAUSA ADICIONADA AQUI: Dá tempo para o SAP desenhar a tela antes da extração
     time.sleep(3)
 
+
 EXEC_KEYWORDS = ["execut", "execute", "ausführen", "pesquis", "search", "run"]
+
 
 def extrair_leituras_sap(session, data_leitura):
     try:
         # Preenche a data da leitura
-        session.findById(
-            "wnd[0]/usr/ctxtSP$00002-LOW"
-        ).text = data_leitura
+        session.findById("wnd[0]/usr/ctxtSP$00002-LOW").text = data_leitura
 
         # Estava dando erro de layout, então comentei a linha abaixo. Se quiser preencher o código, descomente e ajuste conforme necessário.
         # Preenche o código
-        #session.findById(
+        # session.findById(
         #    "wnd[0]/usr/ctxtSP$00003-LOW"
-        #).text = "000"
+        # ).text = "000"
 
         # Executa o relatório
-        session.findById(
-            "wnd[0]/tbar[1]/btn[8]"
-        ).press()
+        session.findById("wnd[0]/tbar[1]/btn[8]").press()
 
         time.sleep(3)
 
         # Localiza a tabela de resultados
-        tabela = session.findById(
-            "wnd[0]/usr/cntlCONTAINER/shellcont/shell"
-        )
+        tabela = session.findById("wnd[0]/usr/cntlCONTAINER/shellcont/shell")
 
         # Abre a seleção de variantes
-        tabela.pressToolbarButton(
-            "&MB_VARIANT"
-        )
+        tabela.pressToolbarButton("&MB_VARIANT")
 
-                # Seleciona a tabela de variantes
+        # Seleciona a tabela de variantes
         variante = session.findById(
             "wnd[1]/usr/ssubD0500_SUBSCREEN:"
             "SAPLSLVC_DIALOG:0501/"
@@ -216,31 +224,29 @@ def extrair_leituras_sap(session, data_leitura):
         for i in range(total_linhas):
             # A coluna técnica que guarda o nome do layout no SAP se chama "VARIANT"
             nome_layout = variante.GetCellValue(i, "VARIANT")
-            
+
             if nome_layout == "/PAULO":
                 variante.currentCellRow = i
                 variante.selectedRows = str(i)
                 variante.clickCurrentCell()
                 layout_encontrado = True
-                break # Encontrou, pode parar de procurar!
-                
+                break  # Encontrou, pode parar de procurar!
+
         # Trava de segurança: se alguém deletar o layout /PAULO do SAP
         if not layout_encontrado:
-            print("⚠️ AVISO: O layout '/PAULO' não foi encontrado! O script vai falhar se as colunas estiverem erradas.")
+            print(
+                "⚠️ AVISO: O layout '/PAULO' não foi encontrado! O script vai falhar se as colunas estiverem erradas."
+            )
             # Se não achar, clica na linha 0 só para tentar seguir ou avise o erro
             variante.currentCellRow = 0
             variante.selectedRows = "0"
             variante.clickCurrentCell()
 
         # Abre o menu de exportação
-        tabela.pressToolbarContextButton(
-            "&MB_EXPORT"
-        )
+        tabela.pressToolbarContextButton("&MB_EXPORT")
 
         # Seleciona a opção Clipboard
-        tabela.selectContextMenuItem(
-            "&PC"
-        )
+        tabela.selectContextMenuItem("&PC")
 
         # Seleciona a opção de Clipboard
         opcao_clipboard = session.findById(
@@ -254,9 +260,7 @@ def extrair_leituras_sap(session, data_leitura):
         opcao_clipboard.setFocus()
 
         # Confirma a exportação
-        session.findById(
-            "wnd[1]/tbar[0]/btn[0]"
-        ).press()
+        session.findById("wnd[1]/tbar[0]/btn[0]").press()
 
         time.sleep(2)
 
@@ -266,19 +270,14 @@ def extrair_leituras_sap(session, data_leitura):
         return texto
 
     except Exception as e:
-        print(
-            f"❌ Erro ao extrair dados do SAP: {e}"
-        )
+        print(f"❌ Erro ao extrair dados do SAP: {e}")
         return None
+
 
 def converter_texto_sap_para_dataframe(texto):
     linhas = texto.splitlines()
 
-    linhas = [
-        linha.strip()
-        for linha in linhas
-        if linha.strip()
-    ]
+    linhas = [linha.strip() for linha in linhas if linha.strip()]
 
     indice_cabecalho = None
 
@@ -288,21 +287,15 @@ def converter_texto_sap_para_dataframe(texto):
             break
 
     if indice_cabecalho is None:
-        raise ValueError(
-            "Cabeçalho da tabela não encontrado."
-        )
+        raise ValueError("Cabeçalho da tabela não encontrado.")
 
     cabecalho = linhas[indice_cabecalho]
 
-    colunas = [
-        coluna.strip()
-        for coluna in cabecalho.split("|")
-        if coluna.strip()
-    ]
+    colunas = [coluna.strip() for coluna in cabecalho.split("|") if coluna.strip()]
 
     dados = []
 
-    for linha in linhas[indice_cabecalho + 1:]:
+    for linha in linhas[indice_cabecalho + 1 :]:
 
         if set(linha) <= {"-", " "}:
             continue
@@ -310,67 +303,54 @@ def converter_texto_sap_para_dataframe(texto):
         if "|" not in linha:
             continue
 
-        valores = [
-            valor.strip()
-            for valor in linha.split("|")
-            if valor.strip()
-        ]
+        valores = [valor.strip() for valor in linha.split("|") if valor.strip()]
 
         if len(valores) == len(colunas):
             dados.append(valores)
 
-    df = pd.DataFrame(
-        dados,
-        columns=colunas
-    )
+    df = pd.DataFrame(dados, columns=colunas)
 
- # 🔴 ADICIONE ESTE PRINT AQUI PARA DESCOBRIR OS NOMES ORIGINAIS:
+    # 🔴 ADICIONE ESTE PRINT AQUI PARA DESCOBRIR OS NOMES ORIGINAIS:
     print("\n🧐 Colunas extraídas do SAP:", df.columns.tolist())
 
     # Renomeia as colunas
-    df = df.rename(columns={
-    "Instalação": "instalacao",
-    "Dt.leitura": "data_leitura",
-    "ML": "ml",
-    "NtLei": "ntlei",
-    "Unid.leit.": "unid_leit",
-    "Consumo atual": "consumo_atual",
-    "SL": "sl",
-    "TL": "tl",
-    "Modif.por": "br",
-    "Reg.": "reg",
-    "CasaAntVírg.":"leitura",
-    "Equipamento":'medidor'
-})
+    df = df.rename(
+        columns={
+            "Instalação": "instalacao",
+            "Dt.leitura": "data_leitura",
+            "ML": "ml",
+            "NtLei": "ntlei",
+            "Unid.leit.": "unid_leit",
+            "Consumo atual": "consumo_atual",
+            "SL": "sl",
+            "TL": "tl",
+            "Modif.por": "br",
+            "Reg.": "reg",
+            "CasaAntVírg.": "leitura",
+            "Equipamento": "medidor",
+        }
+    )
 
+    df["instalacao"] = df["instalacao"].astype(int)
 
-    df["instalacao"] = (
-    df["instalacao"]
-    .astype(int)
-)
-
-
-    df["data_leitura"] = pd.to_datetime(
-    df["data_leitura"],
-    format="%d.%m.%Y"
-).dt.date
-    
+    df["data_leitura"] = pd.to_datetime(df["data_leitura"], format="%d.%m.%Y").dt.date
 
     df["consumo_atual"] = (
-    df["consumo_atual"]
-    .str.replace(".", "", regex=False)
-    .str.replace(",", ".", regex=False)
-    .astype(float)
+        df["consumo_atual"]
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False)
+        .astype(float)
     )
 
     df["leitura"] = (
-    df["leitura"]
-    .str.replace(".", "", regex=False)
-    .str.replace(",", ".", regex=False)
-    .astype(float)
-)
+        df["leitura"]
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False)
+        .astype(float)
+    )
 
     return df
+
 
 def criar_tabela_consumo_diario():
     conn = psycopg2.connect(
@@ -378,7 +358,7 @@ def criar_tabela_consumo_diario():
         port="5432",
         database="postgres",
         user="postgres",
-        password="root"
+        password="root",
     )
 
     cursor = conn.cursor()
@@ -422,59 +402,33 @@ def criar_tabela_consumo_diario():
     cursor.close()
     conn.close()
 
-    print(
-        "✅ Tabela CENEGED.tb_consumo_diario criada/verificada."
-    )
+    print("✅ Tabela CENEGED.tb_consumo_diario criada/verificada.")
+
 
 def inserir_consumo_diario(df):
 
     if df.empty:
-        print(
-            "⚠️ Nenhum dado novo para inserir."
-        )
+        print("⚠️ Nenhum dado novo para inserir.")
         return
 
     # Remove todas as instalações que possuem
     # mais de um registro na mesma data
     qtd_registros = (
-        df.groupby(
-            [
-                "instalacao",
-                "data_leitura"
-            ]
-        )
-        .size()
-        .reset_index(
-            name="qtd"
-        )
+        df.groupby(["instalacao", "data_leitura"]).size().reset_index(name="qtd")
     )
 
-    registros_duplicados = qtd_registros[
-        qtd_registros["qtd"] > 1
-    ]
+    registros_duplicados = qtd_registros[qtd_registros["qtd"] > 1]
 
     df = df.merge(
-        registros_duplicados[
-            [
-                "instalacao",
-                "data_leitura"
-            ]
-        ],
-        on=[
-            "instalacao",
-            "data_leitura"
-        ],
+        registros_duplicados[["instalacao", "data_leitura"]],
+        on=["instalacao", "data_leitura"],
         how="left",
-        indicator=True
+        indicator=True,
     )
 
     # Mantém apenas instalações que aparecem
     # uma única vez na data
-    df = df[
-        df["_merge"] == "left_only"
-    ].drop(
-        columns=["_merge"]
-    )
+    df = df[df["_merge"] == "left_only"].drop(columns=["_merge"])
 
     if df.empty:
         print(
@@ -484,11 +438,7 @@ def inserir_consumo_diario(df):
         return
 
     conn = psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD
+        host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PASSWORD
     )
 
     cursor = conn.cursor()
@@ -505,16 +455,10 @@ def inserir_consumo_diario(df):
         "br",
         "reg",
         "leitura",
-        "medidor"
+        "medidor",
     ]
 
-    valores = [
-        tuple(row)
-        for row in df[colunas].itertuples(
-            index=False,
-            name=None
-        )
-    ]
+    valores = [tuple(row) for row in df[colunas].itertuples(index=False, name=None)]
 
     query = """
         INSERT INTO "CENEGED"."tb_consumo_diario" (
@@ -542,20 +486,15 @@ def inserir_consumo_diario(df):
         DO NOTHING;
     """
 
-    execute_values(
-        cursor,
-        query,
-        valores
-    )
+    execute_values(cursor, query, valores)
 
     conn.commit()
 
-    print(
-        f"✅ {cursor.rowcount} novos registros inseridos."
-    )
+    print(f"✅ {cursor.rowcount} novos registros inseridos.")
 
     cursor.close()
     conn.close()
+
 
 def obter_siglas_cat():
     engine = create_engine(
@@ -570,63 +509,42 @@ def obter_siglas_cat():
         WHERE sigla IS NOT NULL
     """
 
-    df_cat = pd.read_sql(
-        query,
-        engine
-    )
+    df_cat = pd.read_sql(query, engine)
 
     engine.dispose()
 
     # Padroniza as siglas
-    siglas = (
-        df_cat["sigla"]
-        .astype(str)
-        .str.strip()
-        .str.upper()
-        .tolist()
-    )
+    siglas = df_cat["sigla"].astype(str).str.strip().str.upper().tolist()
 
     return siglas
+
 
 def filtrar_leituras_por_sigla(df):
     siglas_validas = obter_siglas_cat()
 
     # Pega os dois primeiros caracteres da unidade de leitura
-    df["sigla"] = (
-        df["unid_leit"]
-        .astype(str)
-        .str[:2]
-        .str.upper()
-    )
+    df["sigla"] = df["unid_leit"].astype(str).str[:2].str.upper()
 
     # Mantém apenas siglas que existem na TB-CAT
-    df = df[
-        df["sigla"].isin(siglas_validas)
-    ].copy()
+    df = df[df["sigla"].isin(siglas_validas)].copy()
 
     # Remove a coluna auxiliar
-    df = df.drop(
-        columns=["sigla"]
-    )
+    df = df.drop(columns=["sigla"])
 
     return df
+
 
 def filtrar_consumo(df):
 
-    df = df[
-        df["consumo_atual"] <= 10000
-    ].copy()
+    df = df[df["consumo_atual"] <= 10000].copy()
 
     return df
+
 
 def limpar_dados_antigos(data_leitura):
 
     conn = psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD
+        host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PASSWORD
     )
 
     cursor = conn.cursor()
@@ -636,10 +554,7 @@ def limpar_dados_antigos(data_leitura):
         WHERE data_leitura <> %s;
     """
 
-    cursor.execute(
-        query,
-        (data_leitura,)
-    )
+    cursor.execute(query, (data_leitura,))
 
     registros_excluidos = cursor.rowcount
 
@@ -648,9 +563,8 @@ def limpar_dados_antigos(data_leitura):
     cursor.close()
     conn.close()
 
-    print(
-        f"🧹 {registros_excluidos} registros antigos removidos."
-    )
+    print(f"🧹 {registros_excluidos} registros antigos removidos.")
+
 
 def identificar_consumos_fora_do_limite():
 
@@ -690,30 +604,28 @@ def identificar_consumos_fora_do_limite():
         AND m.coeficiente_variacao <= 0.50
         AND m.coeficiente_variacao > 0;
 """
-    df_anomalias = pd.read_sql(
-        query,
-        engine
-    )
+    df_anomalias = pd.read_sql(query, engine)
 
     engine.dispose()
 
     return df_anomalias
+
 
 def identificar_erros_digitacao(df_anomalias, tolerancia=0.15):
 
     import math
 
     vizinhos = {
-        '0': [],
-        '1': [],
-        '2': ['1', '0'],
-        '3': ['2'],
-        '4': ['1'],
-        '5': ['4', '2'],
-        '6': ['5', '3'],
-        '7': ['4'],
-        '8': ['7', '5'],
-        '9': ['8', '6']
+        "0": [],
+        "1": [],
+        "2": ["1", "0"],
+        "3": ["2"],
+        "4": ["1"],
+        "5": ["4", "2"],
+        "6": ["5", "3"],
+        "7": ["4"],
+        "8": ["7", "5"],
+        "9": ["8", "6"],
     }
 
     df = df_anomalias.copy()
@@ -775,6 +687,7 @@ def identificar_erros_digitacao(df_anomalias, tolerancia=0.15):
 
     return df
 
+
 def busca_endereco(session, df_novos):
 
     enderecos = []
@@ -789,9 +702,7 @@ def busca_endereco(session, df_novos):
 
     for i, (_, row) in enumerate(df_novos.iterrows(), start=1):
 
-        print(
-            f"📍 [{i}/{total}] Instalação: {row['instalacao']}"
-        )
+        print(f"📍 [{i}/{total}] Instalação: {row['instalacao']}")
 
         if primeira_consulta:
 
@@ -813,17 +724,13 @@ def busca_endereco(session, df_novos):
             # Volta para a tela de pesquisa
             session.findById("wnd[0]").sendVKey(12)
 
-        campo = session.findById(
-            "wnd[0]/usr/ctxtEANLD-ANLAGE"
-        )
+        campo = session.findById("wnd[0]/usr/ctxtEANLD-ANLAGE")
 
         campo.text = str(row["instalacao"])
 
         session.findById("wnd[0]").sendVKey(0)
 
-        endereco = session.findById(
-            "wnd[0]/usr/txtEANLD-LINE1"
-        ).text
+        endereco = session.findById("wnd[0]/usr/txtEANLD-LINE1").text
 
         enderecos.append(endereco)
 
@@ -833,6 +740,7 @@ def busca_endereco(session, df_novos):
 
     return df_novos
 
+
 # Função de logins alt SAP
 def main(argv: Optional[list] = None):
 
@@ -841,7 +749,7 @@ def main(argv: Optional[list] = None):
     data_leitura = datetime.strptime(data_sap, "%d.%m.%Y").date()
 
     print("🔐 Iniciando logins SAP...")
-    
+
     session = None
     usuario_conectado = None
 
@@ -851,119 +759,83 @@ def main(argv: Optional[list] = None):
         pwd = os.getenv(f"SAP_PASSWORD_{i}")
 
         if not user or not pwd:
-            continue # Se a conta não existir no .env, pula para o próximo número
+            continue  # Se a conta não existir no .env, pula para o próximo número
 
         print(f"\n🔄 Tentativa {i} - Testando login com: {user}")
-        
+
         try:
             session = login_and_open_instalacao(user, pwd)
-            
+
             if session:
                 print(f"✅ Sucesso! Logado com a conta {user}.")
                 usuario_conectado = user
-                break # Encontrou uma conta livre! Sai do loop e vai trabalhar.
-            
+                break  # Encontrou uma conta livre! Sai do loop e vai trabalhar.
+
         except Exception as e:
             print(f"⚠️ Falha inesperada com {user}: {e}")
 
-        # Se chegou aqui, é porque a conta falhou (logon múltiplo ou erro). 
+        # Se chegou aqui, é porque a conta falhou (logon múltiplo ou erro).
         # Encerra o processo do SAP para abrir limpo na próxima tentativa.
         encerrar_sap()
         time.sleep(2)
 
     # Trava de segurança: Se esgotou todas as 5 contas e nenhuma deu certo
     if not session:
-        print("\n❌ Todas as contas cadastradas estão bloqueadas ou em uso. Abortando esta extração.")
-        return # Interrompe a execução e o schedule tentará novamente daqui a 30 minutos
+        print(
+            "\n❌ Todas as contas cadastradas estão bloqueadas ou em uso. Abortando esta extração."
+        )
+        return  # Interrompe a execução e o schedule tentará novamente daqui a 30 minutos
 
     print("🚀 Abrindo relatório de leituras...")
 
-    abrir_relatorio_leituras(
-        session
-    )
+    abrir_relatorio_leituras(session)
 
     print("📊 Iniciando extração...")
 
-    texto = extrair_leituras_sap(
-        session,
-        data_sap
-    )
+    texto = extrair_leituras_sap(session, data_sap)
 
     if texto:
 
-        print(
-            "\n📋 Conteúdo extraído do Clipboard:\n"
-        )
+        print("\n📋 Conteúdo extraído do Clipboard:\n")
 
-        with open(
-            "clipboard_sap.txt",
-            "w",
-            encoding="utf-8"
-        ) as arquivo:
+        with open("clipboard_sap.txt", "w", encoding="utf-8") as arquivo:
 
             arquivo.write(texto)
 
-        print(
-            "✅ Conteúdo salvo em clipboard_sap.txt"
-        )
+        print("✅ Conteúdo salvo em clipboard_sap.txt")
 
         # Converte o texto do SAP para DataFrame
-        df = converter_texto_sap_para_dataframe(
-            texto
-        )
+        df = converter_texto_sap_para_dataframe(texto)
 
-        print(
-            f"📊 Total de leituras extraídas: "
-            f"{len(df)}"
-        )
+        print(f"📊 Total de leituras extraídas: " f"{len(df)}")
 
         # Filtra apenas as siglas existentes na TB-CAT
-        df = filtrar_leituras_por_sigla(
-            df
-        )
+        df = filtrar_leituras_por_sigla(df)
 
-        print(
-            f"✅ Leituras após filtro de CAT: "
-            f"{len(df)}"
-        )
+        print(f"✅ Leituras após filtro de CAT: " f"{len(df)}")
 
         # Remove consumos acima de 1000
-        df = filtrar_consumo(
-            df
-        )
+        df = filtrar_consumo(df)
 
-        print(
-            f"✅ Leituras com consumo até 1000: "
-            f"{len(df)}"
-        )
+        print(f"✅ Leituras com consumo até 1000: " f"{len(df)}")
 
         # Cria a tabela caso ainda não exista
         criar_tabela_consumo_diario()
 
         # Remove registros de datas diferentes
-        limpar_dados_antigos(
-            data_leitura
-        )
+        limpar_dados_antigos(data_leitura)
 
         # Insere os dados do dia
         # Duplicidades são ignoradas através de:
         # instalacao + data_leitura + reg
-        inserir_consumo_diario(
-            df
-        )
+        inserir_consumo_diario(df)
 
-        print(
-            "✅ Dados inseridos no PostgreSQL."
-        )
+        print("✅ Dados inseridos no PostgreSQL.")
 
         # Identifica consumos fora dos limites esperados
-        df_anomalias = (
-            identificar_consumos_fora_do_limite()
-        )
+        df_anomalias = identificar_consumos_fora_do_limite()
 
-        print(
-            "\n⚠️ Consumos fora dos limites esperados:"
-        )
+        print("\n⚠️ Consumos fora dos limites esperados:")
 
         df_anomalias = identificar_erros_digitacao(df_anomalias)
 
@@ -971,45 +843,32 @@ def main(argv: Optional[list] = None):
 
         # Caminho 1: Pasta local do projeto
         arquivo_excel = "erros_digitacao.xlsx"
-        
+
         # Caminho 2: Sua pasta do OneDrive (com o 'r' na frente para aceitar as barras)
         arquivo_onedrive = r"C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx"
         arquivo_excel = arquivo_onedrive
 
         # Apenas possíveis erros de digitação
-        df_novos = df_anomalias[
-            df_anomalias["possivel_erro_digitacao"]
-        ].copy()
+        df_novos = df_anomalias[df_anomalias["possivel_erro_digitacao"]].copy()
 
         # Chave única
         df_novos["chave"] = (
-            df_novos["instalacao"].astype(str)
-            + "_"
-            + df_novos["br"].astype(str)
+            df_novos["instalacao"].astype(str) + "_" + df_novos["br"].astype(str)
         )
 
         # Lê histórico
         if Path(arquivo_historico).exists():
 
-            with open(
-                arquivo_historico,
-                "r",
-                encoding="utf-8"
-            ) as f:
+            with open(arquivo_historico, "r", encoding="utf-8") as f:
 
-                historico = set(
-                    linha.strip()
-                    for linha in f
-                )
+                historico = set(linha.strip() for linha in f)
 
         else:
 
             historico = set()
 
         # Apenas registros inéditos
-        df_novos = df_novos[
-            ~df_novos["chave"].isin(historico)
-        ]
+        df_novos = df_novos[~df_novos["chave"].isin(historico)]
 
         # Recria a planilha somente com os novos
         if not df_novos.empty:
@@ -1027,29 +886,38 @@ def main(argv: Optional[list] = None):
             df_para_planilha = df_novos.drop(columns=["chave"]).copy()
 
             # 1. Renomeia os cabeçalhos para português amigável
-            df_para_planilha = df_para_planilha.rename(columns={
-                "instalacao": "Instalação",
-                "medidor": "Medidor",
-                "media_consumo": "Média Consumo",
-                "consumo_atual": "Consumo Atual",
-                "leitura": "Leitura",
-                "br": "Matrícula (BR)",
-                "leiturista": "Leiturista",
-                "supervisor": "Supervisor",
-                "endereco": "Endereço",
-                "possivel_erro_digitacao": "Possível Erro",
-                "consumo_simulado": "Consumo Simulado",
-                "digito_testado": "Dígito Testado"
-            })
+            df_para_planilha = df_para_planilha.rename(
+                columns={
+                    "instalacao": "Instalação",
+                    "medidor": "Medidor",
+                    "media_consumo": "Média Consumo",
+                    "consumo_atual": "Consumo Atual",
+                    "leitura": "Leitura",
+                    "br": "Matrícula (BR)",
+                    "leiturista": "Leiturista",
+                    "supervisor": "Supervisor",
+                    "endereco": "Endereço",
+                    "possivel_erro_digitacao": "Possível Erro",
+                    "consumo_simulado": "Consumo Simulado",
+                    "digito_testado": "Dígito Testado",
+                }
+            )
 
             # 2. Deixa as colunas mais importantes na frente (opcional)
             colunas_desejadas = [
-                "Instalação", "Endereço", "Leiturista", "Supervisor", 
-                "Consumo Atual", "Média Consumo", "Leitura", "Medidor"
+                "Instalação",
+                "Endereço",
+                "Leiturista",
+                "Supervisor",
+                "Consumo Atual",
+                "Média Consumo",
+                "Leitura",
+                "Medidor",
             ]
-            colunas_finais = [c for c in colunas_desejadas if c in df_para_planilha.columns] + \
-                             [c for c in df_para_planilha.columns if c not in colunas_desejadas]
-            
+            colunas_finais = [
+                c for c in colunas_desejadas if c in df_para_planilha.columns
+            ] + [c for c in df_para_planilha.columns if c not in colunas_desejadas]
+
             df_para_planilha = df_para_planilha[colunas_finais]
             # ==========================================================
 
@@ -1060,14 +928,16 @@ def main(argv: Optional[list] = None):
                 # Junta o que já estava lá com os novos erros já formatados
                 df_total = pd.concat([df_antigo, df_para_planilha], ignore_index=True)
                 # Remove eventuais duplicadas se houver (usando o nome novo da coluna "Instalação")
-                df_total = df_total.drop_duplicates(subset=["Instalação", "Matrícula (BR)"], keep="last")
+                df_total = df_total.drop_duplicates(
+                    subset=["Instalação", "Matrícula (BR)"], keep="last"
+                )
             else:
                 df_total = df_para_planilha
 
             # Salva o arquivo atualizado direto na pasta do OneDrive
             df_total.to_excel(arquivo_excel, index=False)
             df_total.to_json("dados_tv.json", orient="records", force_ascii=False)
-            
+
             # ==========================================================
             # ☁️ FORÇAR SINCRONIZAÇÃO IMEDIATA DO ONEDRIVE
             # ==========================================================
@@ -1076,7 +946,7 @@ def main(argv: Optional[list] = None):
                 excel = win32com.client.DispatchEx("Excel.Application")
                 excel.Visible = False
                 excel.DisplayAlerts = False
-                
+
                 # Abre, salva e fecha a planilha rapidamente para acionar a nuvem
                 wb = excel.Workbooks.Open(arquivo_excel)
                 wb.Save()
@@ -1086,17 +956,22 @@ def main(argv: Optional[list] = None):
             except Exception as e:
                 print(f"⚠️ Aviso ao forçar sincronização do Excel: {e}")
             # ==========================================================
-            print(f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!")
+            print(
+                f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!"
+            )
         else:
             print("✅ Nenhum erro novo nesta rodada.")
-            
+
             # Garante que a página web continue carregando o JSON normalmente
             if Path(arquivo_excel).exists():
-                pd.read_excel(arquivo_excel).to_json("dados_tv.json", orient="records", force_ascii=False)
+                pd.read_excel(arquivo_excel).to_json(
+                    "dados_tv.json", orient="records", force_ascii=False
+                )
             else:
                 # SE DELETARAM OS ARQUIVOS E NÃO HÁ ERROS: Cria um JSON vazio para a TV não travar
                 with open("dados_tv.json", "w", encoding="utf-8") as f:
                     f.write("[]")
+
 
 # Agenda de novas extrações a cada 30 minutos
 def rotina_de_extracao():
@@ -1109,6 +984,7 @@ def rotina_de_extracao():
         # Garante que o SAP fecha ao final do processo (com sucesso ou erro)
         encerrar_sap()
         print("\n⏳ Extração concluída! Agendamento reativado.")
+
 
 # ESTE É O ÚNICO if __name__ == "__main__": QUE SEU SCRIPT DEVE TER
 if __name__ == "__main__":
@@ -1125,20 +1001,23 @@ if __name__ == "__main__":
         while True:
             # Roda as tarefas que estão no horário
             schedule.run_pending()
-            
+
             # --- Lógica do Timer Visual ---
             proxima_execucao = schedule.next_run()
             if proxima_execucao:
                 # Calcula os segundos entre agora e a próxima execução
                 tempo_restante = (proxima_execucao - datetime.now()).total_seconds()
-                
+
                 if tempo_restante > 0:
                     minutos, segundos = divmod(int(tempo_restante), 60)
                     # Adicionei espaços extras no final do print para limpar sujeiras na linha
-                    print(f"Próxima extração em: {minutos:02d}:{segundos:02d}          ", end="\r")
-            
-            time.sleep(1) # Aguarda 1 segundo antes de atualizar a tela
+                    print(
+                        f"Próxima extração em: {minutos:02d}:{segundos:02d}          ",
+                        end="\r",
+                    )
+
+            time.sleep(1)  # Aguarda 1 segundo antes de atualizar a tela
 
     except KeyboardInterrupt:
         print("\n\n🛑 Execução encerrada manualmente pelo usuário (Ctrl+C).")
-        encerrar_sap() # Fecha o SAP caso você cancele no meio da extração
+        encerrar_sap()  # Fecha o SAP caso você cancele no meio da extração

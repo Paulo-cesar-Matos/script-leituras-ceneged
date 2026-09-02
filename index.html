@@ -1,107 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Painel de Erros - TV</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
-
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+  </head>
+  <body class="bg-slate-900 text-slate-100 min-h-screen p-6">
     <div class="max-w-7xl mx-auto">
-        <!-- CABEÇALHO -->
-        <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight">Painel de Erros de Digitação</h1>
-                <!-- Aqui a data e hora vão aparecer automaticamente -->
-                <p class="text-slate-400 text-sm" id="texto-atualizacao">Aguardando atualização...</p>
-            </div>
-            <div id="status-atualizacao" class="bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30">
-                🟢 Sistema Operacional
-            </div>
-        </header>
-
-        <!-- TABELA -->
-        <div class="bg-slate-800 rounded-xl shadow-xl overflow-hidden border border-slate-700">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-700/50 text-slate-300 uppercase text-xs tracking-wider">
-                            <!-- Coluna de Data adicionada aqui -->
-                            <th class="p-4">Data</th>
-                            <th class="p-4">Instalação</th>
-                            <th class="p-4">Endereço</th>
-                            <th class="p-4">Leiturista</th>
-                            <th class="p-4">Supervisor</th>
-                            <th class="p-4 text-center">Consumo Atual</th>
-                            <th class="p-4 text-center">Média</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpo-tabela" class="divide-y divide-slate-700 text-sm">
-                        <tr>
-                            <td colspan="7" class="p-6 text-center text-slate-400">Carregando dados...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+      <!-- CABEÇALHO -->
+      <header
+        class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700"
+      >
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight">
+            Painel de Erros de Digitação
+          </h1>
+          <!-- Aqui a data e hora vão aparecer automaticamente -->
+          <p class="text-slate-400 text-sm" id="texto-atualizacao">
+            Aguardando atualização...
+          </p>
         </div>
+        <div
+          id="status-atualizacao"
+          class="bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30"
+        >
+          🟢 Sistema Operacional
+        </div>
+      </header>
+
+      <!-- TABELA -->
+      <div
+        class="bg-slate-800 rounded-xl shadow-xl overflow-hidden border border-slate-700"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr
+                class="bg-slate-700/50 text-slate-300 uppercase text-xs tracking-wider"
+              >
+                <!-- Coluna de Data adicionada aqui -->
+                <th class="p-4">Data</th>
+                <th class="p-4">Instalação</th>
+                <th class="p-4">Endereço</th>
+                <th class="p-4">Leiturista</th>
+                <th class="p-4">Supervisor</th>
+                <th class="p-4 text-center">Consumo Atual</th>
+                <th class="p-4 text-center">Média</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-tabela" class="divide-y divide-slate-700 text-sm">
+              <tr>
+                <td colspan="7" class="p-6 text-center text-slate-400">
+                  Carregando dados...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- SCRIPT DA PÁGINA -->
     <script>
-        async function carregarDados() {
-            try {
-                const resposta = await fetch('dados_tv.json?t=' + new Date().getTime());
-                
-                if (!resposta.ok) throw new Error("Arquivo não encontrado");
+      async function carregarDados() {
+        try {
+          const resposta = await fetch(
+            "dados_tv.json?t=" + new Date().getTime(),
+          );
 
-                const dados = await resposta.json();
-                const corpoTabela = document.getElementById('corpo-tabela');
-                corpoTabela.innerHTML = ''; 
+          if (!resposta.ok) throw new Error("Arquivo não encontrado");
 
-                // Atualiza o texto do cabeçalho com a Data e Hora exatas do momento da leitura
-                const agora = new Date();
-                const dataFormatada = agora.toLocaleDateString('pt-BR');
-                const horaFormatada = agora.toLocaleTimeString('pt-BR');
-                document.getElementById('texto-atualizacao').innerText = `Última atualização: ${dataFormatada} às ${horaFormatada}`;
+          const dados = await resposta.json();
+          const corpoTabela = document.getElementById("corpo-tabela");
+          corpoTabela.innerHTML = "";
 
-                if (dados.length === 0) {
-                    corpoTabela.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-emerald-400 font-medium">Nenhum erro registrado hoje. 🎉</td></tr>`;
-                    document.getElementById('status-atualizacao').className = "bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30";
-                    document.getElementById('status-atualizacao').innerText = "🟢 Atualizado";
-                    return;
-                }
+          // Atualiza o texto do cabeçalho com a Data e Hora exatas do momento da leitura
+          const agora = new Date();
+          const dataFormatada = agora.toLocaleDateString("pt-BR");
+          const horaFormatada = agora.toLocaleTimeString("pt-BR");
+          document.getElementById("texto-atualizacao").innerText =
+            `Última atualização: ${dataFormatada} às ${horaFormatada}`;
 
-                // Cria as linhas da tabela incluindo a nova coluna "Data"
-                dados.forEach(linha => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-700/30 transition-colors";
-                    
-                    tr.innerHTML = `
-                        <td class="p-4 text-slate-400">${linha['Data'] || ''}</td>
-                        <td class="p-4 font-semibold text-amber-400">${linha['Instalação'] || ''}</td>
-                        <td class="p-4 text-slate-300">${linha['Endereço'] || ''}</td>
-                        <td class="p-4 text-slate-300">${linha['Leiturista'] || ''}</td>
-                        <td class="p-4 text-slate-400 text-xs">${linha['Supervisor'] || ''}</td>
-                        <td class="p-4 text-center font-bold text-rose-400">${linha['Consumo Atual'] || ''}</td>
-                        <td class="p-4 text-center text-slate-400">${linha['Média Consumo'] || ''}</td>
+          if (dados.length === 0) {
+            corpoTabela.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-emerald-400 font-medium">Nenhum erro registrado hoje. 🎉</td></tr>`;
+            document.getElementById("status-atualizacao").className =
+              "bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30";
+            document.getElementById("status-atualizacao").innerText =
+              "🟢 Atualizado";
+            return;
+          }
+
+          // Cria as linhas da tabela incluindo a nova coluna "Data"
+          dados.forEach((linha) => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-700/30 transition-colors";
+
+            tr.innerHTML = `
+                        <td class="p-4 text-slate-400">${linha["Data"] || ""}</td>
+                        <td class="p-4 font-semibold text-amber-400">${linha["Instalação"] || ""}</td>
+                        <td class="p-4 text-slate-300">${linha["Endereço"] || ""}</td>
+                        <td class="p-4 text-slate-300">${linha["Leiturista"] || ""}</td>
+                        <td class="p-4 text-slate-400 text-xs">${linha["Supervisor"] || ""}</td>
+                        <td class="p-4 text-center font-bold text-rose-400">${linha["Consumo Atual"] || ""}</td>
+                        <td class="p-4 text-center text-slate-400">${linha["Média Consumo"] || ""}</td>
                     `;
-                    corpoTabela.appendChild(tr);
-                });
+            corpoTabela.appendChild(tr);
+          });
 
-                document.getElementById('status-atualizacao').className = "bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30";
-                document.getElementById('status-atualizacao').innerText = "🟢 Atualizado";
-
-            } catch (erro) {
-                console.error("Erro:", erro);
-                document.getElementById('status-atualizacao').className = "bg-rose-600/20 text-rose-400 px-4 py-2 rounded-lg text-sm font-medium border border-rose-500/30";
-                document.getElementById('status-atualizacao').innerText = "🔴 Aguardando dados...";
-            }
+          document.getElementById("status-atualizacao").className =
+            "bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30";
+          document.getElementById("status-atualizacao").innerText =
+            "🟢 Atualizado";
+        } catch (erro) {
+          console.error("Erro:", erro);
+          document.getElementById("status-atualizacao").className =
+            "bg-rose-600/20 text-rose-400 px-4 py-2 rounded-lg text-sm font-medium border border-rose-500/30";
+          document.getElementById("status-atualizacao").innerText =
+            "🔴 Aguardando dados...";
         }
+      }
 
-        carregarDados();
-        setInterval(carregarDados, 15000); // Atualiza a página a cada 15 segundos
+      carregarDados();
+      setInterval(carregarDados, 15000); // Atualiza a página a cada 15 segundos
     </script>
-</body>
+  </body>
 </html>
