@@ -1,0 +1,13 @@
+# Ignorar variáveis de ambiente (senhas)
+.env
+
+# Ignorar arquivos temporários do Python e do script
+__pycache__/
+*.pyc
+clipboard_sap.txt
+historico_processado.txt
+erros_digitacao.xlsx
+dados_tv.json
+
+# Ignorar cópias locais
+* - Copia.py
