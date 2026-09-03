@@ -261,7 +261,7 @@ def extrair_leituras_sap(session, data_leitura):
         # LIMPA O CLIPBOARD ANTES DO SAP TENTAR COPIAR
         # =======================================================
         pyperclip.copy("")
-        time.sleep(1)
+        time.sleep(5)  # <-- Aumente essa pausa de 2 para 5 segundos para tabelas grandes
 
         # Confirma a exportação
         session.findById("wnd[1]/tbar[0]/btn[0]").press()
@@ -272,9 +272,7 @@ def extrair_leituras_sap(session, data_leitura):
         texto = None
         for tentativa in range(1, 6):
             try:
-                time.sleep(
-                    3
-                )  # <-- Aumente essa pausa de 2 para 3 segundos para tabelas grandes
+                time.sleep(5)  # <-- Aumente essa pausa de 2 para 5 segundos para tabelas grandes
                 texto = pyperclip.paste()
 
                 # Se conseguiu ler um texto válido, sai do loop com sucesso
@@ -283,7 +281,7 @@ def extrair_leituras_sap(session, data_leitura):
 
             except Exception as e:
                 print(f"⏳ Área de transferência ocupada (Tentativa {tentativa}/5)...")
-                time.sleep(3)
+                time.sleep(5)  # Espera mais 5 segundos antes de tentar novamente
 
         if not texto:
             raise Exception(
@@ -334,7 +332,7 @@ def converter_texto_sap_para_dataframe(texto):
 
     df = pd.DataFrame(dados, columns=colunas)
 
-    # 🔴 ADICIONE ESTE PRINT AQUI PARA DESCOBRIR OS NOMES ORIGINAIS:
+    # 🔴 PRINT AQUI PARA DESCOBRIR OS NOMES ORIGINAIS DAS COLUNAS:
     print("\n🧐 Colunas extraídas do SAP:", df.columns.tolist())
 
     # Renomeia as colunas
@@ -450,8 +448,7 @@ def inserir_consumo_diario(df):
         indicator=True,
     )
 
-    # Mantém apenas instalações que aparecem
-    # uma única vez na data
+    # Mantém apenas instalações que aparecem uma única vez na data
     df = df[df["_merge"] == "left_only"].drop(columns=["_merge"])
 
     if df.empty:
