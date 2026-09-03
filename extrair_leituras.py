@@ -761,7 +761,6 @@ def busca_endereco(session, df_novos):
 
     return df_novos
 
-
 # Função de logins alt SAP
 def main(argv: Optional[list] = None):
 
@@ -798,7 +797,7 @@ def main(argv: Optional[list] = None):
         # Se chegou aqui, é porque a conta falhou (logon múltiplo ou erro).
         # Encerra o processo do SAP para abrir limpo na próxima tentativa.
         encerrar_sap()
-        time.sleep(2)
+        time.sleep(5)  # Pausa antes de tentar a próxima conta
 
     # Trava de segurança: Se esgotou todas as 5 contas e nenhuma deu certo
     if not session:
@@ -864,6 +863,7 @@ def main(argv: Optional[list] = None):
         arquivo_excel = "erros_digitacao.xlsx"
 
         # Caminho 2: Sua pasta do OneDrive (com o 'r' na frente para aceitar as barras)
+        # Alterar antes de subir para o MiniPC da TV, pois o caminho do OneDrive é diferente no MiniPC
         arquivo_onedrive = os.path.join(
             r"C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
         )
@@ -1001,14 +1001,10 @@ def main(argv: Optional[list] = None):
                     print("☁️ Excel Online atualizado (Sincronização ao vivo mantida)!")
             except Exception as e:
                 print(f"⚠️ Aviso ao usar win32com para salvar: {e}")
-                print(
-                    "Salvando pelo método tradicional (pode pausar a sincronização)..."
-                )
+                print("Salvando pelo método tradicional (pode pausar a sincronização)...")
                 df_total.to_excel(arquivo_excel, index=False)
             # ==========================================================
-            print(
-                f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!"
-            )
+            print(f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!")
         else:
             print("✅ Nenhum erro novo nesta rodada.")
 
@@ -1024,7 +1020,6 @@ def main(argv: Optional[list] = None):
                 # SE DELETARAM OS ARQUIVOS E NÃO HÁ ERROS: Cria um JSON vazio para a TV não travar
                 with open("dados_tv.json", "w", encoding="utf-8") as f:
                     f.write("[]")
-
 
 # Agenda de novas extrações a cada 30 minutos
 def rotina_de_extracao():
@@ -1069,7 +1064,7 @@ if __name__ == "__main__":
                         end="\r",
                     )
 
-            time.sleep(1)  # Aguarda 1 segundo antes de atualizar a tela
+            time.sleep(5)  # Aguarda 5 segundos antes de atualizar a tela
 
     except KeyboardInterrupt:
         print("\n\n🛑 Execução encerrada manualmente pelo usuário (Ctrl+C).")
