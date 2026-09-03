@@ -956,7 +956,7 @@ def main(argv: Optional[list] = None):
 
             # Salva o arquivo atualizado direto na pasta do OneDrive
             df_total.to_excel(arquivo_excel, index=False)
-            df_total.to_json("dados_tv.json", orient="records", force_ascii=False)
+            df_total.to_json("dados_tv.json", orient="records", force_ascii=False, date_format="iso")
 
             # ==========================================================
             # ☁️ FORÇAR SINCRONIZAÇÃO IMEDIATA DO ONEDRIVE
@@ -984,9 +984,7 @@ def main(argv: Optional[list] = None):
 
             # Garante que a página web continue carregando o JSON normalmente
             if Path(arquivo_excel).exists():
-                pd.read_excel(arquivo_excel).to_json(
-                    "dados_tv.json", orient="records", force_ascii=False
-                )
+                pd.read_excel(arquivo_excel).to_json("dados_tv.json", orient="records", force_ascii=False, date_format="iso")
             else:
                 # SE DELETARAM OS ARQUIVOS E NÃO HÁ ERROS: Cria um JSON vazio para a TV não travar
                 with open("dados_tv.json", "w", encoding="utf-8") as f:
