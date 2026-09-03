@@ -924,6 +924,7 @@ def main(argv: Optional[list] = None):
 
             # 2. Deixa as colunas mais importantes na frente (opcional)
             colunas_desejadas = [
+                "Data",
                 "Instalação",
                 "Endereço",
                 "Leiturista",
