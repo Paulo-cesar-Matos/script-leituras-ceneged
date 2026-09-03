@@ -38,6 +38,7 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 # ==========================
 
+
 def encerrar_sap():
     try:
         print("🧹 Encerrando SAP...")
@@ -59,7 +60,7 @@ def encerrar_sap():
 def abrir_sap_logon():
     print("🚀 AI - Análise de Erros iniciada...")
     subprocess.Popen(SAP_LOGON_PATH)
-    time.sleep(1)
+    time.sleep(5)  # Aguarda o SAP Logon abrir
 
 
 def _children(obj) -> Iterable:
@@ -150,7 +151,7 @@ def login_and_open_instalacao(user: str, pwd: str):
     pwd_field.setFocus()
 
     session.findById("wnd[0]").sendVKey(0)
-    time.sleep(1.5)
+    time.sleep(5)
 
     # ---> VERIFICA SE DEU ERRO OU SE ABRIR A TELA DE LOGON MÚLTIPLO <---
     # Se o SAP abrir uma janela adicional (wnd[1]), significa que o logon foi barrado
@@ -178,7 +179,7 @@ def abrir_relatorio_leituras(session):
     session.findById("wnd[0]/tbar[1]/btn[8]").press()
 
     # ⏱️ PAUSA ADICIONADA AQUI: Dá tempo para o SAP desenhar a tela antes da extração
-    time.sleep(3)
+    time.sleep(6)
 
 
 EXEC_KEYWORDS = ["execut", "execute", "ausführen", "pesquis", "search", "run"]
@@ -198,7 +199,7 @@ def extrair_leituras_sap(session, data_leitura):
         # Executa o relatório
         session.findById("wnd[0]/tbar[1]/btn[8]").press()
 
-        time.sleep(3)
+        time.sleep(6)
 
         # Localiza a tabela de resultados
         tabela = session.findById("wnd[0]/usr/cntlCONTAINER/shellcont/shell")
@@ -256,6 +257,12 @@ def extrair_leituras_sap(session, data_leitura):
         opcao_clipboard.select()
         opcao_clipboard.setFocus()
 
+        # =======================================================
+        # LIMPA O CLIPBOARD ANTES DO SAP TENTAR COPIAR
+        # =======================================================
+        pyperclip.copy("")
+        time.sleep(1)
+
         # Confirma a exportação
         session.findById("wnd[1]/tbar[0]/btn[0]").press()
 
@@ -265,7 +272,9 @@ def extrair_leituras_sap(session, data_leitura):
         texto = None
         for tentativa in range(1, 6):
             try:
-                time.sleep(2)  # Aguarda o SAP terminar de copiar
+                time.sleep(
+                    3
+                )  # <-- Aumente essa pausa de 2 para 3 segundos para tabelas grandes
                 texto = pyperclip.paste()
 
                 # Se conseguiu ler um texto válido, sai do loop com sucesso
@@ -274,7 +283,7 @@ def extrair_leituras_sap(session, data_leitura):
 
             except Exception as e:
                 print(f"⏳ Área de transferência ocupada (Tentativa {tentativa}/5)...")
-                time.sleep(3)  # Espera 3 segundos e tenta de novo
+                time.sleep(3)
 
         if not texto:
             raise Exception(
@@ -858,7 +867,8 @@ def main(argv: Optional[list] = None):
         arquivo_excel = "erros_digitacao.xlsx"
 
         # Caminho 2: Sua pasta do OneDrive (com o 'r' na frente para aceitar as barras)
-        arquivo_onedrive = os.path.join(r"C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
+        arquivo_onedrive = os.path.join(
+            r"C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
         )
         arquivo_excel = arquivo_onedrive
 
@@ -951,35 +961,41 @@ def main(argv: Optional[list] = None):
                 df_total = df_para_planilha
 
             # Salva o JSON para a tela da TV atualizar imediatamente
-            df_total.to_json("dados_tv.json", orient="records", force_ascii=False, date_format="iso")
+            df_total.to_json(
+                "dados_tv.json", orient="records", force_ascii=False, date_format="iso"
+            )
 
             # ==========================================================
             # ☁️ ATUALIZAÇÃO SEGURA DO EXCEL ONEDRIVE (Mantém a sincronização ao vivo)
             # ==========================================================
             try:
                 import tempfile
-                
+
                 if not Path(arquivo_excel).exists():
                     # Se não existe, o Pandas pode criar a primeira vez sem problemas
                     df_total.to_excel(arquivo_excel, index=False)
                 else:
                     # Salva em um arquivo temporário para não destruir o arquivo original
-                    temp_path = os.path.join(tempfile.gettempdir(), "temp_erros_digitacao.xlsx")
+                    temp_path = os.path.join(
+                        tempfile.gettempdir(), "temp_erros_digitacao.xlsx"
+                    )
                     df_total.to_excel(temp_path, index=False)
-                    
+
                     # Usa o próprio Excel do Windows para copiar e colar os dados
                     # Isso garante que a ID de Sincronização do OneDrive (AutoSave) não seja quebrada
                     excel = win32com.client.DispatchEx("Excel.Application")
                     excel.Visible = False
                     excel.DisplayAlerts = False
-                    
+
                     wb_temp = excel.Workbooks.Open(temp_path)
                     wb_target = excel.Workbooks.Open(arquivo_excel)
-                    
+
                     # Limpa a planilha original e cola os dados novos
                     wb_target.Sheets(1).Cells.Clear()
-                    wb_temp.Sheets(1).UsedRange.Copy(Destination=wb_target.Sheets(1).Range("A1"))
-                    
+                    wb_temp.Sheets(1).UsedRange.Copy(
+                        Destination=wb_target.Sheets(1).Range("A1")
+                    )
+
                     # Salva e fecha
                     wb_target.Save()
                     wb_target.Close()
@@ -988,7 +1004,9 @@ def main(argv: Optional[list] = None):
                     print("☁️ Excel Online atualizado (Sincronização ao vivo mantida)!")
             except Exception as e:
                 print(f"⚠️ Aviso ao usar win32com para salvar: {e}")
-                print("Salvando pelo método tradicional (pode pausar a sincronização)...")
+                print(
+                    "Salvando pelo método tradicional (pode pausar a sincronização)..."
+                )
                 df_total.to_excel(arquivo_excel, index=False)
             # ==========================================================
             print(
@@ -999,7 +1017,12 @@ def main(argv: Optional[list] = None):
 
             # Garante que a página web continue carregando o JSON normalmente
             if Path(arquivo_excel).exists():
-                pd.read_excel(arquivo_excel).to_json("dados_tv.json", orient="records", force_ascii=False, date_format="iso")
+                pd.read_excel(arquivo_excel).to_json(
+                    "dados_tv.json",
+                    orient="records",
+                    force_ascii=False,
+                    date_format="iso",
+                )
             else:
                 # SE DELETARAM OS ARQUIVOS E NÃO HÁ ERROS: Cria um JSON vazio para a TV não travar
                 with open("dados_tv.json", "w", encoding="utf-8") as f:
