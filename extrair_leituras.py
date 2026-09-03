@@ -950,27 +950,46 @@ def main(argv: Optional[list] = None):
             else:
                 df_total = df_para_planilha
 
-            # Salva o arquivo atualizado direto na pasta do OneDrive
-            df_total.to_excel(arquivo_excel, index=False)
+            # Salva o JSON para a tela da TV atualizar imediatamente
             df_total.to_json("dados_tv.json", orient="records", force_ascii=False, date_format="iso")
 
             # ==========================================================
-            # ☁️ FORÇAR SINCRONIZAÇÃO IMEDIATA DO ONEDRIVE
+            # ☁️ ATUALIZAÇÃO SEGURA DO EXCEL ONEDRIVE (Mantém a sincronização ao vivo)
             # ==========================================================
             try:
-                # Abre o Excel em segundo plano (invisível)
-                excel = win32com.client.DispatchEx("Excel.Application")
-                excel.Visible = False
-                excel.DisplayAlerts = False
-
-                # Abre, salva e fecha a planilha rapidamente para acionar a nuvem
-                wb = excel.Workbooks.Open(arquivo_excel)
-                wb.Save()
-                wb.Close()
-                excel.Quit()
-                print("☁️ Sincronização com o Excel Online forçada com sucesso!")
+                import tempfile
+                
+                if not Path(arquivo_excel).exists():
+                    # Se não existe, o Pandas pode criar a primeira vez sem problemas
+                    df_total.to_excel(arquivo_excel, index=False)
+                else:
+                    # Salva em um arquivo temporário para não destruir o arquivo original
+                    temp_path = os.path.join(tempfile.gettempdir(), "temp_erros_digitacao.xlsx")
+                    df_total.to_excel(temp_path, index=False)
+                    
+                    # Usa o próprio Excel do Windows para copiar e colar os dados
+                    # Isso garante que a ID de Sincronização do OneDrive (AutoSave) não seja quebrada
+                    excel = win32com.client.DispatchEx("Excel.Application")
+                    excel.Visible = False
+                    excel.DisplayAlerts = False
+                    
+                    wb_temp = excel.Workbooks.Open(temp_path)
+                    wb_target = excel.Workbooks.Open(arquivo_excel)
+                    
+                    # Limpa a planilha original e cola os dados novos
+                    wb_target.Sheets(1).Cells.Clear()
+                    wb_temp.Sheets(1).UsedRange.Copy(Destination=wb_target.Sheets(1).Range("A1"))
+                    
+                    # Salva e fecha
+                    wb_target.Save()
+                    wb_target.Close()
+                    wb_temp.Close()
+                    excel.Quit()
+                    print("☁️ Excel Online atualizado (Sincronização ao vivo mantida)!")
             except Exception as e:
-                print(f"⚠️ Aviso ao forçar sincronização do Excel: {e}")
+                print(f"⚠️ Aviso ao usar win32com para salvar: {e}")
+                print("Salvando pelo método tradicional (pode pausar a sincronização)...")
+                df_total.to_excel(arquivo_excel, index=False)
             # ==========================================================
             print(
                 f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!"
