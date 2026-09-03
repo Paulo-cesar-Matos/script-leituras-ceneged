@@ -261,7 +261,9 @@ def extrair_leituras_sap(session, data_leitura):
         # LIMPA O CLIPBOARD ANTES DO SAP TENTAR COPIAR
         # =======================================================
         pyperclip.copy("")
-        time.sleep(5)  # <-- Aumente essa pausa de 2 para 5 segundos para tabelas grandes
+        time.sleep(
+            5
+        )  # <-- Aumente essa pausa de 2 para 5 segundos para tabelas grandes
 
         # Confirma a exportação
         session.findById("wnd[1]/tbar[0]/btn[0]").press()
@@ -272,7 +274,9 @@ def extrair_leituras_sap(session, data_leitura):
         texto = None
         for tentativa in range(1, 6):
             try:
-                time.sleep(5)  # <-- Aumente essa pausa de 2 para 5 segundos para tabelas grandes
+                time.sleep(
+                    5
+                )  # <-- Aumente essa pausa de 2 para 5 segundos para tabelas grandes
                 texto = pyperclip.paste()
 
                 # Se conseguiu ler um texto válido, sai do loop com sucesso
@@ -761,6 +765,7 @@ def busca_endereco(session, df_novos):
 
     return df_novos
 
+
 # Função de logins alt SAP
 def main(argv: Optional[list] = None):
 
@@ -1001,10 +1006,14 @@ def main(argv: Optional[list] = None):
                     print("☁️ Excel Online atualizado (Sincronização ao vivo mantida)!")
             except Exception as e:
                 print(f"⚠️ Aviso ao usar win32com para salvar: {e}")
-                print("Salvando pelo método tradicional (pode pausar a sincronização)...")
+                print(
+                    "Salvando pelo método tradicional (pode pausar a sincronização)..."
+                )
                 df_total.to_excel(arquivo_excel, index=False)
             # ==========================================================
-            print(f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!")
+            print(
+                f"✅ Planilha do OneDrive atualizada com {len(df_novos)} novos erros!"
+            )
         else:
             print("✅ Nenhum erro novo nesta rodada.")
 
@@ -1020,6 +1029,7 @@ def main(argv: Optional[list] = None):
                 # SE DELETARAM OS ARQUIVOS E NÃO HÁ ERROS: Cria um JSON vazio para a TV não travar
                 with open("dados_tv.json", "w", encoding="utf-8") as f:
                     f.write("[]")
+
 
 # Agenda de novas extrações a cada 30 minutos
 def rotina_de_extracao():

@@ -6,99 +6,99 @@ title Inicializador - Painel de Erros SAP
 cd /d "%~dp0"
 
 echo ==========================================================
-echo        VERIFICANDO REQUISITOS DO SISTEMA
+echo  VERIFICANDO REQUISITOS DO SISTEMA
 echo ==========================================================
 
 :: 1. VERIFICA PASTA DO ONEDRIVE
 set "ONEDRIVE_PATH=%USERPROFILE%\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros"
 if exist "%ONEDRIVE_PATH%" (
-    echo [OK] OneDrive Logado - Pasta encontrada.
-) else (
-    echo [X] ERRO: Pasta do OneDrive nao encontrada. 
-    echo     Verifique se o OneDrive da CENEGED esta logado neste computador.
-    echo     Caminho esperado: "%ONEDRIVE_PATH%"
-    pause
-    exit
+  echo [OK] OneDrive Logado - Pasta encontrada.
+  ) else (
+  echo [X] ERRO: Pasta do OneDrive nao encontrada.
+  echo  Verifique se o OneDrive da CENEGED esta logado neste computador.
+  echo  Caminho esperado: "%ONEDRIVE_PATH%"
+  pause
+  exit
 )
 
 :: 2. VERIFICA DEPENDENCIAS OBRIGATORIAS NO CMD (GIT e PYTHON)
 git --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [X] Git nao encontrado! Instalando automaticamente via winget...
-    winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
-    echo.
-    echo [!] Instalacao do Git concluida! FECHE esta janela e abra o script novamente.
-    pause
-    exit
-) else (
-    echo [OK] Git
+  echo [X] Git nao encontrado! Instalando automaticamente via winget...
+  winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+  echo.
+  echo [!] Instalacao do Git concluida! FECHE esta janela e abra o script novamente.
+  pause
+  exit
+  ) else (
+  echo [OK] Git
 )
 
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [X] Python nao encontrado! Instale o Python e marque "Add Python to PATH".
-    pause
-    exit
-) else (
-    echo [OK] Python
+  echo [X] Python nao encontrado! Instale o Python e marque "Add Python to PATH".
+  pause
+  exit
+  ) else (
+  echo [OK] Python
 )
 
 :: 3. VERIFICA OUTROS PROGRAMAS ESSENCIAIS (APENAS AVISO SE FALTAR)
 
 :: SAP Logon / SAP GUI
 if exist "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe" (
-    echo [OK] SAP Logon
-) else if exist "C:\Program Files\SAP\FrontEnd\SAPgui\saplogon.exe" (
-    echo [OK] SAP Logon
-) else (
-    echo [!] AVISO: SAP GUI nao encontrado nos caminhos padroes.
+  echo [OK] SAP Logon
+  ) else if exist "C:\Program Files\SAP\FrontEnd\SAPgui\saplogon.exe" (
+  echo [OK] SAP Logon
+  ) else (
+  echo [!] AVISO: SAP GUI nao encontrado nos caminhos padroes.
 )
 
 :: VPN GlobalProtect
 if exist "C:\Program Files\Palo Alto Networks\GlobalProtect\PanGPA.exe" (
-    echo [OK] GlobalProtect VPN
-) else (
-    echo [!] AVISO: GlobalProtect VPN nao encontrado.
+  echo [OK] GlobalProtect VPN
+  ) else (
+  echo [!] AVISO: GlobalProtect VPN nao encontrado.
 )
 
 :: PostgreSQL
 if exist "C:\Program Files\PostgreSQL" (
-    echo [OK] PostgreSQL
-) else (
-    echo [!] AVISO: PostgreSQL nao encontrado na pasta padrao.
+  echo [OK] PostgreSQL
+  ) else (
+  echo [!] AVISO: PostgreSQL nao encontrado na pasta padrao.
 )
 
 :: VS Code
 code --version >nul 2>&1
 if %errorlevel% equ 0 (
-    echo [OK] VS Code
-) else if exist "%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe" (
-    echo [OK] VS Code
-) else (
-    echo [!] AVISO: VS Code nao encontrado.
+  echo [OK] VS Code
+  ) else if exist "%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe" (
+  echo [OK] VS Code
+  ) else (
+  echo [!] AVISO: VS Code nao encontrado.
 )
 
 :: DBeaver
 if exist "C:\Program Files\DBeaver\dbeaver.exe" (
-    echo [OK] DBeaver
-) else if exist "%LOCALAPPDATA%\DBeaver\dbeaver.exe" (
-    echo [OK] DBeaver
-) else (
-    echo [!] AVISO: DBeaver nao encontrado.
+  echo [OK] DBeaver
+  ) else if exist "%LOCALAPPDATA%\DBeaver\dbeaver.exe" (
+  echo [OK] DBeaver
+  ) else (
+  echo [!] AVISO: DBeaver nao encontrado.
 )
 
 :: RustDesk
 if exist "C:\Program Files\RustDesk\rustdesk.exe" (
-    echo [OK] RustDesk
-) else (
-    echo [!] AVISO: RustDesk nao encontrado.
+  echo [OK] RustDesk
+  ) else (
+  echo [!] AVISO: RustDesk nao encontrado.
 )
 
 :: AnyDesk
 if exist "C:\Program Files (x86)\AnyDesk\AnyDesk.exe" (
-    echo [OK] AnyDesk
-) else (
-    echo [!] AVISO: AnyDesk nao encontrado.
+  echo [OK] AnyDesk
+  ) else (
+  echo [!] AVISO: AnyDesk nao encontrado.
 )
 
 echo ==========================================================
@@ -112,7 +112,7 @@ set REPOSITORIO=https://github.com/Paulo-cesar-Matos/script-leituras-ceneged.git
 if not exist "%PASTA_PROJETO%\.git" (
   echo Projeto nao encontrado localmente. Baixando do zero...
   git clone %REPOSITORIO% "%PASTA_PROJETO%"
-) else (
+  ) else (
   echo Buscando atualizacoes do codigo no GitHub...
   cd "%PASTA_PROJETO%"
   git pull origin main
