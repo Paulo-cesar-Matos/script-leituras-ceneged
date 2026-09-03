@@ -858,11 +858,7 @@ def main(argv: Optional[list] = None):
         arquivo_excel = "erros_digitacao.xlsx"
 
         # Caminho 2: Sua pasta do OneDrive (com o 'r' na frente para aceitar as barras)
-        caminho_base = os.path.expanduser("~")
-
-        arquivo_onedrive = os.path.join(
-            caminho_base,
-            r"OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
+        arquivo_onedrive = os.path.join(r"C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
         )
         arquivo_excel = arquivo_onedrive
 
