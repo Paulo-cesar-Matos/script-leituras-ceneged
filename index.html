@@ -67,6 +67,24 @@
       let colunaOrdenacao = "Data";
       let ordemCrescente = false;
 
+      function formatarData(valor) {
+        if (!valor) return "";
+        try {
+            const d = new Date(valor);
+            if (isNaN(d.getTime())) return valor;
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const ano = d.getFullYear();
+            const hora = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            // Se o horário for 00:00, mostra só a data
+            if (hora === "00" && min === "00") return `${dia}/${mes}/${ano}`;
+            return `${dia}/${mes}/${ano} ${hora}:${min}`;
+        } catch (e) {
+            return valor;
+        }
+      }
+
       function definirOrdenacao(coluna) {
         if (colunaOrdenacao === coluna) {
             ordemCrescente = !ordemCrescente;
@@ -135,7 +153,7 @@
             tr.className = "hover:bg-slate-700/30 transition-colors";
 
             tr.innerHTML = `
-                <td class="p-4 text-slate-400">${linha["Data"] || ""}</td>
+                <td class="p-4 text-slate-400">${formatarData(linha["Data"])}</td>
                 <td class="p-4 font-semibold text-amber-400">${linha["Instalação"] || ""}</td>
                 <td class="p-4 text-slate-300">${linha["Endereço"] || ""}</td>
                 <td class="p-4 text-slate-300">${linha["Leiturista"] || ""}</td>
