@@ -38,7 +38,6 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 # ==========================
 
-
 def encerrar_sap():
     try:
         print("🧹 Encerrando SAP...")
@@ -170,14 +169,12 @@ def login_and_open_instalacao(user: str, pwd: str):
 
 def abrir_relatorio_leituras(session):
     tree = session.findById(
-        "wnd[0]/usr/cntlIMAGE_CONTAINER/" "shellcont/shell/shellcont[0]/shell"
+        "wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell"
     )
-
     tree.selectedNode = "F00006"
     tree.doubleClickNode("F00006")
 
     session.findById("wnd[0]/usr/ctxtP_REPORT").text = "AQA0SYSTQV000009LEITURAS======"
-
     session.findById("wnd[0]/tbar[1]/btn[8]").press()
 
     # ⏱️ PAUSA ADICIONADA AQUI: Dá tempo para o SAP desenhar a tela antes da extração
@@ -262,10 +259,28 @@ def extrair_leituras_sap(session, data_leitura):
         # Confirma a exportação
         session.findById("wnd[1]/tbar[0]/btn[0]").press()
 
-        time.sleep(2)
+        # =======================================================
+        # TENTATIVAS DE LEITURA DO CLIPBOARD (Evita WinError 0)
+        # =======================================================
+        texto = None
+        for tentativa in range(1, 6):
+            try:
+                time.sleep(2)  # Aguarda o SAP terminar de copiar
+                texto = pyperclip.paste()
 
-        # Lê o conteúdo do Clipboard
-        texto = pyperclip.paste()
+                # Se conseguiu ler um texto válido, sai do loop com sucesso
+                if texto and len(texto.strip()) > 0:
+                    break
+
+            except Exception as e:
+                print(f"⏳ Área de transferência ocupada (Tentativa {tentativa}/5)...")
+                time.sleep(3)  # Espera 3 segundos e tenta de novo
+
+        if not texto:
+            raise Exception(
+                "O SAP não enviou os dados ou a Área de Transferência travou."
+            )
+        # =======================================================
 
         return texto
 
@@ -354,11 +369,11 @@ def converter_texto_sap_para_dataframe(texto):
 
 def criar_tabela_consumo_diario():
     conn = psycopg2.connect(
-        host="DB_HOST",
-        port="DB_PORT",
-        database="DB_USER",
-        user="DB_USER",
-        password="DB_PASSWORD",
+        host=DB_HOST,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
     )
 
     cursor = conn.cursor()
@@ -787,11 +802,9 @@ def main(argv: Optional[list] = None):
         return  # Interrompe a execução e o schedule tentará novamente daqui a 30 minutos
 
     print("🚀 Abrindo relatório de leituras...")
-
     abrir_relatorio_leituras(session)
 
     print("📊 Iniciando extração...")
-
     texto = extrair_leituras_sap(session, data_sap)
 
     if texto:
@@ -846,11 +859,12 @@ def main(argv: Optional[list] = None):
 
         # Caminho 2: Sua pasta do OneDrive (com o 'r' na frente para aceitar as barras)
         caminho_base = os.path.expanduser("~")
-        
+
         arquivo_onedrive = os.path.join(
-        caminho_base,
-        r"OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
+            caminho_base,
+            r"OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx",
         )
+        arquivo_excel = arquivo_onedrive
 
         # Apenas possíveis erros de digitação
         df_novos = df_anomalias[df_anomalias["possivel_erro_digitacao"]].copy()
@@ -1025,3 +1039,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\n🛑 Execução encerrada manualmente pelo usuário (Ctrl+C).")
         encerrar_sap()  # Fecha o SAP caso você cancele no meio da extração
+    except Exception as e:
+        print(f"\n❌ Erro inesperado: {e}")
+        encerrar_sap()  # Fecha o SAP caso ocorra algum erro inesperado
