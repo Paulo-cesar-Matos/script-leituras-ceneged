@@ -906,6 +906,7 @@ def main(argv: Optional[list] = None):
             # 1. Renomeia os cabeçalhos para português amigável
             df_para_planilha = df_para_planilha.rename(
                 columns={
+                    "data_leitura": "Data",
                     "instalacao": "Instalação",
                     "medidor": "Medidor",
                     "media_consumo": "Média Consumo",
