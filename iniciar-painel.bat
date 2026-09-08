@@ -2,7 +2,7 @@
 :: Garante que o terminal rode na mesma pasta onde o .bat está salvo
 cd /d "%~dp0"
 
-:: Nome da pasta e link do seu repositório Git (Substitua pelo seu link real)
+:: Nome da pasta e link do seu repositório Git
 set PASTA_PROJETO=Painel_Erros_SAP
 set REPOSITORIO=https://github.com/Paulo-cesar-Matos/script-leituras-ceneged.git
 
@@ -25,7 +25,7 @@ if not exist ".env" (
     echo.
     echo ==========================================================
     echo [AVISO] O arquivo .env nao foi encontrado!
-    echo O Git nao baixa senhas por seguranca. Crie o arquivo .env
+    echo Coloque o arquivo .env
     echo dentro da pasta "%PASTA_PROJETO%" antes de continuar.
     echo ==========================================================
     echo.
