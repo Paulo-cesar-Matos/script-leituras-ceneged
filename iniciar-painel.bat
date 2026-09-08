@@ -2,18 +2,16 @@
 :: Garante que o terminal rode na mesma pasta onde o .bat está salvo
 cd /d "%~dp0"
 
-
-
 :: Nome da pasta e link do seu repositório Git (Substitua pelo seu link real)
 set PASTA_PROJETO=Painel_Erros_SAP
-set REPOSITORIO=https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+set REPOSITORIO=https://github.com/Paulo-cesar-Matos/script-leituras-ceneged.git
 
 :: 1. VERIFICA SE O PROJETO JÁ FOI BAIXADO
 if not exist "%PASTA_PROJETO%\.git" (
-    echo ?? Projeto nao encontrado. Baixando do zero...
+    echo Projeto nao encontrado. Baixando do zero...
     git clone %REPOSITORIO% "%PASTA_PROJETO%"
 ) else (
-    echo ?? Atualizando o codigo com as ultimas alteracoes...
+    echo Atualizando o codigo com as ultimas alteracoes...
     cd "%PASTA_PROJETO%"
     git pull origin main
     cd ..
@@ -35,10 +33,8 @@ if not exist ".env" (
     exit
 )
 
-
-
 :: 4. INICIA O SISTEMA
-echo ?? Iniciando o robo e o painel...
+echo Iniciando o painel.
 
 :: Inicia o robo do SAP minimizado na barra de tarefas
 start /MIN python extrair_leituras.py
