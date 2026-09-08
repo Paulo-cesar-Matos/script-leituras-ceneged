@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Painel de Erros - TV</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
   </head>
   <body class="bg-slate-900 text-slate-100 min-h-screen p-6">
@@ -22,11 +23,19 @@
             Aguardando atualização...
           </p>
         </div>
-        <div
-          id="status-atualizacao"
-          class="bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30"
-        >
-          🟢 Sistema Operacional
+        <div class="flex items-center gap-3">
+          <button
+            onclick="baixarExcel()"
+            class="bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg text-sm font-medium border border-blue-500/30 hover:bg-blue-600/40 transition-colors cursor-pointer"
+          >
+            📥 Baixar Excel
+          </button>
+          <div
+            id="status-atualizacao"
+            class="bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/30"
+          >
+            🟢 Sistema Operacional
+          </div>
         </div>
       </header>
 
@@ -137,6 +146,37 @@
       let colunaOrdenacao = "Data";
       let ordemCrescente = false;
 
+      function baixarExcel() {
+        if (dadosGlobais.length === 0) {
+            alert("Nenhum dado disponível para baixar.");
+            return;
+        }
+
+        // Prepara os dados com as datas formatadas
+        const dadosFormatados = dadosGlobais.map(linha => {
+            const copia = {};
+            copia["Data"] = formatarData(linha["Data"]);
+            copia["Instalação"] = linha["Instalação"] || "";
+            copia["Endereço"] = linha["Endereço"] || "";
+            copia["Leiturista"] = linha["Leiturista"] || "";
+            copia["Supervisor"] = linha["Supervisor"] || "";
+            copia["Consumo Atual"] = linha["Consumo Atual"] || "";
+            copia["Média Consumo"] = linha["Média Consumo"] || "";
+            return copia;
+        });
+
+        const ws = XLSX.utils.json_to_sheet(dadosFormatados);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Erros de Digitação");
+
+        // Nome do arquivo com a data de hoje
+        const hoje = new Date();
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const ano = hoje.getFullYear();
+        XLSX.writeFile(wb, `erros_digitacao_${dia}-${mes}-${ano}.xlsx`);
+      }
+
       function formatarData(valor) {
         if (!valor) return "";
         try {
@@ -198,18 +238,33 @@
             let valorA = a[colunaOrdenacao] || "";
             let valorB = b[colunaOrdenacao] || "";
 
+            // Detecta datas ISO (ex: "2026-09-03T00:00:00.000")
+            let strA = valorA.toString();
+            let strB = valorB.toString();
+            if (strA.includes("T") && strB.includes("T")) {
+                let dateA = new Date(strA);
+                let dateB = new Date(strB);
+                if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+                    valorA = dateA.getTime();
+                    valorB = dateB.getTime();
+                    if (valorA < valorB) return ordemCrescente ? -1 : 1;
+                    if (valorA > valorB) return ordemCrescente ? 1 : -1;
+                    return 0;
+                }
+            }
+
             // Tratar conversão para números quando possível
-            let strA = valorA.toString().replace(",", ".");
-            let strB = valorB.toString().replace(",", ".");
-            let numA = parseFloat(strA);
-            let numB = parseFloat(strB);
+            let numStrA = strA.replace(",", ".");
+            let numStrB = strB.replace(",", ".");
+            let numA = parseFloat(numStrA);
+            let numB = parseFloat(numStrB);
 
             // Se ambos forem números (e.g. consumo)
             if (
               !isNaN(numA) &&
               !isNaN(numB) &&
-              strA.trim() !== "" &&
-              strB.trim() !== ""
+              numStrA.trim() !== "" &&
+              numStrB.trim() !== ""
             ) {
               valorA = numA;
               valorB = numB;
