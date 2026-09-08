@@ -1,9 +1,15 @@
 ## Observações
-+ **Leitura** - Recomenda-se abrir e ler esse arquivo em uma IDE (VSCode, PyCharm)
-+ **Execução** - Abre o VSCode e deixa executando. Ele será atualizado automaticamente.
-+ **Arquivo** - Não pode abrir o arquivo [erros_digitacao.xlsx](C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx) enquanto o código estiver sendo executado, senão ele pode crashar, e tem que executar de novo manualmente. 
-    - Caso apenas você queira ver o arquivo, tem que ir pelo Excel Online [vindo por aqui](https://cenegedadm-my.sharepoint.com/:x:/g/personal/leitufortal02_cenegedadm_onmicrosoft_com/IQAk-TJyrR6SR4mfvFoy7gfTAVi3d5sWhZuI6Tf4JC1zFu0?e=TAToLH)
-+ **Correções** - Sempre atualizar nesse arquivo a cada modificação nova! (ir nas últimas linhas)
++ **Leitura** - Recomenda-se abrir e ler o arquivo .md no Obsidian, e o código em uma IDE (VSCode, PyCharm).
++ **Execução** - Execute o *Ligar_Painel.bat* e deixa executando. Ele será atualizado automaticamente a cada 30 minutos, incluindo o código ao iniciar junto com o sistema.
++ **Conexão com a VPN**  
+	+ Antes de executar o *Ligar_Painel.bat*, verifique a conexão com o Global na barra de tarefas, no canto inferior esquerdo. 
+	+ Tem que aparecer um ícone de um globo cinza, se não aparecer clique na setinha e clica nesse globo. 
+	+ Coloque o endereço de portal e clica em Connect. 
+	+ Faça o login colocando o e-mail, senha e o código que será recebido pelo celular através do SMS ou do Microsoft Authenticator. 
+	+ Após confirmar a conexão execute o *Ligar_Painel.bat*. 
++ **Arquivo** - Não pode abrir o arquivo [erros_digitacao.xlsx](C:\Users\paulomatos\OneDrive - CENEGED - COMPANHIA ELETROMECANICA E GERENCIAMENTO DE DADOS\script erros\erros_digitacao.xlsx) localmente enquanto o código estiver sendo executado, senão ele pode travar, e só vai executar de novo no tempo programado. 
+    - Caso apenas você queira ver o arquivo, tem que ir pelo Excel Online, [vindo por aqui](https://cenegedadm-my.sharepoint.com/:x:/g/personal/leitufortal02_cenegedadm_onmicrosoft_com/IQAk-TJyrR6SR4mfvFoy7gfTAVi3d5sWhZuI6Tf4JC1zFu0?e=TAToLH)
++ **Correções** - Sempre atualizar nesse arquivo a cada modificação nova! (ir na página CORRECOES)
 + **Uso de IA** - Antes de colar um código gerado por IA, leia e interprete antes de executar e testar, se possível, faça um debug do código para verificar se há erros.
 + **Página painel de erros** - É aberto quando o *Ligar_Painel.bat* é executado junto com o sistema (configurado pela TI). 
 	- Nela é exibido as seguintes colunas horizontais: 
@@ -14,7 +20,8 @@
 		- Supervisor
 		- Consumo Atual
 		- Média
-		
+
+
 ---
 
 ## CORRECOES
@@ -52,4 +59,17 @@
 >>O campo *Nota de leitura do leiturista* foi retirado
 >>>Ir em comentário: Estava dando erro de layout, então comentei a linha abaixo. Se quiser preencher o código, descomente e ajuste conforme necessário.
 >>O painel de erros não apresentava a data
->>>Ir em comentário: Garante que a página web continue carregando o JSON normalmente (Nota: Se não tiver o dados_tv.json, ele exibirá essa mensagem: Nenhum erro registrado hoje. 🎉)
+>>>Ir em comentário: Garante que a página web continue carregando o JSON normalmente (Nota: Se não tiver o *dados_tv.json*, ele exibirá essa mensagem: Nenhum erro registrado hoje. 🎉)
+
+> 02/09/2026
+>>Adicionado ao repositório de Paulo-cesar-Matos
+>>>Ir em: https://github.com/Paulo-cesar-Matos/script-leituras-ceneged.git
+>>>(Recomendação de segurança: Mover o repositório caso o colaborador seja desligado, recomendável realizar o upload do repositório em uma conta do GitHub onde a empresa tenha controle!)
+>>O script *Ligar_Painel.bat* baixa e salva a pasta do repositório na área de trabalho, e baixa e instala o Git para atualização dos scripts.
+>>>Nota: O arquivo **.env** (arquivos de logins do SAP e do postgres) não foi upado no repositório por segurança, para isso, adicione o arquivo manualmente fisicamente em:
+>>>**C:\Users\{usuario-logado}\Desktop\Painel_Erros_SAP** 
+>>Adicionado o arquivo README.md para documentação de correções e observações!
+
+>08/09/2026
+>>Adicionado a opção "Baixar Excel"
+>>>Ir em comentário: Opção de baixar o arquivo Excel
