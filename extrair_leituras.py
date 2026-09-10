@@ -8,7 +8,7 @@ import pyperclip
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values  # type: ignore[reportUnknownVariableType]
 from datetime import datetime
 from pathlib import Path
 import schedule
@@ -63,7 +63,7 @@ def abrir_sap_logon():
     time.sleep(5)  # Aguarda o SAP Logon abrir
 
 
-def _children(obj) -> Iterable:
+def _children(obj) -> Iterable[object]:
     try:
         return [obj.Children(i) for i in range(obj.Children.Count)]
     except Exception:
@@ -78,7 +78,7 @@ def _children_count(obj) -> int:
         return obj.Children.Count
     except Exception:
         try:
-            return len(obj.Children)
+            return len(_children(obj)) # pyright: ignore[reportArgumentType]
         except Exception:
             return 0
 
@@ -767,7 +767,7 @@ def busca_endereco(session, df_novos):
 
 
 # Função de logins alt SAP
-def main(argv: Optional[list] = None):
+def main(argv: Optional[list[str]] = None):
 
     # Data que será pesquisada no SAP
     data_sap = datetime.now().strftime("%d.%m.%Y")
@@ -776,7 +776,6 @@ def main(argv: Optional[list] = None):
     print("🔐 Iniciando logins SAP...")
 
     session = None
-    usuario_conectado = None
 
     # Tenta até 5 contas diferentes configuradas no .env
     for i in range(1, 6):
@@ -793,7 +792,6 @@ def main(argv: Optional[list] = None):
 
             if session:
                 print(f"✅ Sucesso! Logado com a conta {user}.")
-                usuario_conectado = user
                 break  # Encontrou uma conta livre! Sai do loop e vai trabalhar.
 
         except Exception as e:
