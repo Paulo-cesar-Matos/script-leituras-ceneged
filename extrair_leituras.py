@@ -99,21 +99,36 @@ def _safe_attr(obj, name, default=None):
 
 
 def get_application():
-    sap_gui_auto = win32com.client.GetObject("SAPGUI")
+    sap_gui_auto = None
+    
+    # Tenta pegar a interface do SAP várias vezes (espera até 30 segundos)
+    for tentativa in range(15):
+        try:
+            sap_gui_auto = win32com.client.GetObject("SAPGUI")
+            break  # Se conseguiu, sai do loop imediatamente
+        except Exception:
+            print(f"⏳ Aguardando comunicação com o SAP (Tentativa {tentativa+1}/15)...")
+            time.sleep(2)
+            
+    if not sap_gui_auto:
+        raise RuntimeError("O SAP demorou muito para responder ou está bloqueado.")
+
     try:
         app = sap_gui_auto.GetScriptingEngine
-        if app:
-            return app
+        if app: return app
     except Exception:
         pass
     try:
         app = sap_gui_auto.GetScriptingEngine()
-        if app:
-            return app
+        if app: return app
     except Exception:
         pass
-    ctrl = win32com.client.gencache.EnsureDispatch("Sapgui.ScriptingCtrl.1")
-    return _safe_attr(ctrl, "Application", ctrl)
+        
+    try:
+        ctrl = win32com.client.gencache.EnsureDispatch("Sapgui.ScriptingCtrl.1")
+        return _safe_attr(ctrl, "Application", ctrl)
+    except Exception:
+        return None
 
 
 def open_connection_by_name(app, name: str):
