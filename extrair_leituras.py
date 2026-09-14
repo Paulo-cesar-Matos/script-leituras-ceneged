@@ -90,7 +90,7 @@ def _child(obj, idx: int):
         return obj.Children.Item(idx)
 
 
-def _safe_attr(obj, name, default=None):
+def _safe_attr(obj, name, default=None): # type: ignore
     try:
         return getattr(obj, name)
     except Exception:
@@ -98,40 +98,30 @@ def _safe_attr(obj, name, default=None):
 
 
 def get_application():
-    sap_gui_auto = None
-
-    # Tenta pegar a interface do SAP várias vezes (espera até 30 segundos)
+    # Tenta pegar a interface do SAP várias vezes (espera até 45 segundos no total)
     for tentativa in range(15):
         try:
+            # 1. Tenta encontrar a janela do SAP
             sap_gui_auto = win32com.client.GetObject("SAPGUI")
-            break  # Se conseguiu, sai do loop imediatamente
+            
+            # 2. Tenta puxar o motor de automação (onde o erro 605 estava ocorrendo)
+            try:
+                app = sap_gui_auto.GetScriptingEngine
+                if app: 
+                    return app
+            except Exception:
+                app = sap_gui_auto.GetScriptingEngine()
+                if app: 
+                    return app
+                
         except Exception:
-            print(
-                f"⏳ Aguardando comunicação com o SAP (Tentativa {tentativa+1}/15)..."
-            )
-            time.sleep(2)
+            # Se der qualquer erro em qualquer uma das duas etapas acima, ele ignora e cai no sleep
+            pass 
 
-    if not sap_gui_auto:
-        raise RuntimeError("O SAP demorou muito para responder ou está bloqueado.")
-
-    try:
-        app = sap_gui_auto.GetScriptingEngine
-        if app:
-            return app
-    except Exception:
-        pass
-    try:
-        app = sap_gui_auto.GetScriptingEngine()
-        if app:
-            return app
-    except Exception:
-        pass
-
-    try:
-        ctrl = win32com.client.gencache.EnsureDispatch("Sapgui.ScriptingCtrl.1")
-        return _safe_attr(ctrl, "Application", ctrl)
-    except Exception:
-        return None
+        print(f"⏳ Aguardando motor interno do SAP (Tentativa {tentativa+1}/15)...")
+        time.sleep(3)
+        
+    raise RuntimeError("O SAP demorou muito para carregar o motor de Scripting ou a tela travou.")
 
 
 def open_connection_by_name(app, name: str):
