@@ -127,7 +127,7 @@ def get_session_after_open(conn) -> object:
     for _ in range(30):
         if _children_count(conn) > 0:
             return _child(conn, SESSION_INDEX)
-        time.sleep(0.5)
+        time.sleep(5)
     raise RuntimeError("A sessão não ficou disponível após abrir a conexão.")
 
 
