@@ -73,3 +73,15 @@
 >08/09/2026
 >>Adicionado a opção "Baixar Excel"
 >>>Ir em comentário: Opção de baixar o arquivo Excel
+
+>14/09/2026
+>>Adicionado o arquivo "iniciar-painel.bat" 
+>>> **Observações**
+>>> Abre o arquivo e altere o caminho de execução.
+>>> Para ver a localização do Python instalado na máquina, use:
+>>> where python
+>>> ![[Pasted image 20260914125117.png]]
+>>> 
+>>> ![[Pasted image 20260914124901.png|551]]
+>>>
+>>>Para executar ao iniciar o Windows, o arquivo terá que ser copiado para o shell:startup no explorador de arquivos.
