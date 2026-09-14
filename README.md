@@ -82,6 +82,6 @@
 >>> where python
 >>> ![[Pasted image 20260914125117.png]]
 >>> 
->>> ![[Pasted image 20260914124901.png|551]]
+>>> ![Pasted image 20260914124901.png|551](https://github.com/Paulo-cesar-Matos/script-leituras-ceneged/blob/01ebfd2a0c55c6224f585e7ec9f8e87fecaf22ff/img-doc/Pasted%20image%2020260914124901.png)
 >>>
 >>>Para executar ao iniciar o Windows, o arquivo terá que ser copiado para o shell:startup no explorador de arquivos.
