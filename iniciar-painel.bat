@@ -8,7 +8,7 @@ echo Iniciando paineis e automacoes...
 :: ir em shell:startup e colocar o iniciar-painel.bat
 
 :: Inicia o script de extracao repe minimizado
-start "Leitura Repe" /MIN cmd /k "timeout /t 30 /nobreak > nul && cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario && C:\Python314\python.exe extracao_leitura_repe.py"
+start "Leitura Repe" /MIN cmd /k "timeout /t 1800 /nobreak > nul && cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario && C:\Python314\python.exe extracao_leitura_repe.py"
 :: Inicia o bot de extrair leituras minimizado
 start "Extrair Leituras" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\script-leituras-ceneged && C:\Python314\python.exe extrair_leituras.py"
 
