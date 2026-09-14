@@ -12,7 +12,6 @@ from sqlalchemy import create_engine
 from psycopg2.extras import execute_values  # type: ignore[reportUnknownVariableType]
 from datetime import datetime
 from pathlib import Path
-import schedule
 from dotenv import load_dotenv
 
 # Carrega as senhas ocultas do arquivo .env
@@ -100,30 +99,34 @@ def _safe_attr(obj, name, default=None):
 
 def get_application():
     sap_gui_auto = None
-    
+
     # Tenta pegar a interface do SAP várias vezes (espera até 30 segundos)
     for tentativa in range(15):
         try:
             sap_gui_auto = win32com.client.GetObject("SAPGUI")
             break  # Se conseguiu, sai do loop imediatamente
         except Exception:
-            print(f"⏳ Aguardando comunicação com o SAP (Tentativa {tentativa+1}/15)...")
+            print(
+                f"⏳ Aguardando comunicação com o SAP (Tentativa {tentativa+1}/15)..."
+            )
             time.sleep(2)
-            
+
     if not sap_gui_auto:
         raise RuntimeError("O SAP demorou muito para responder ou está bloqueado.")
 
     try:
         app = sap_gui_auto.GetScriptingEngine
-        if app: return app
+        if app:
+            return app
     except Exception:
         pass
     try:
         app = sap_gui_auto.GetScriptingEngine()
-        if app: return app
+        if app:
+            return app
     except Exception:
         pass
-        
+
     try:
         ctrl = win32com.client.gencache.EnsureDispatch("Sapgui.ScriptingCtrl.1")
         return _safe_attr(ctrl, "Application", ctrl)
@@ -1062,6 +1065,14 @@ def rotina_de_extracao():
 # ESTE É O ÚNICO if __name__ == "__main__": QUE SEU SCRIPT DEVE TER
 if __name__ == "__main__":
     try:
+        rotina_de_extracao()
+    except Exception as e:
+        print(f"Erro: {e}")
+        encerrar_sap()
+
+"""
+if __name__ == "__main__":
+    try:
         print("▶️ Executando a primeira vez imediatamente...")
         rotina_de_extracao()
 
@@ -1097,3 +1108,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Erro inesperado: {e}")
         encerrar_sap()  # Fecha o SAP caso ocorra algum erro inesperado
+"""
