@@ -33,6 +33,11 @@ C:\Python314\python.exe extrair_leituras.py
 
 echo.
 echo ========================================
+echo Aguardando 30 segundos para o Windows limpar o SAP da memoria...
+timeout /t 30 /nobreak > nul
+
+echo.
+echo ========================================
 echo [%time%] Iniciando: Leitura Repescagem
 cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario
 C:\Python314\python.exe extracao_leitura_repe.py
