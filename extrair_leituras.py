@@ -4,6 +4,7 @@ import sys
 import subprocess
 from typing import Optional, Iterable
 import win32com.client
+import win32com
 import pyperclip
 import pandas as pd
 import psycopg2
