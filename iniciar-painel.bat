@@ -2,7 +2,9 @@
 echo Iniciando paineis e automacoes...
 
 :: preconfig paineis modulos
-:: C:\Python314\python.exe -m pip install pywin32 pyperclip pandas psycopg2-binary sqlalchemy schedule python-dotenv
+:: C:\Python314\python.exe -m pip install openpyxl pywin32 pyperclip pandas psycopg2-binary sqlalchemy schedule python-dotenv
+:: instalação extensão edge/chrome
+:: 3-2-1 Revolver - Tab Rotator & Twitch Auto-Reloader
 
 :: Inicia o script de extracao repe minimizado
 start "Leitura Repe" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario && C:\Python314\python.exe extracao_leitura_repe.py"
@@ -23,8 +25,5 @@ start "Backend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\operacao-di
 :: Aguarda 5 segundos para dar tempo de os processos iniciarem
 timeout /t 5 /nobreak > nul
 
-:: Abre os navegadores com os paineis locais
-:: Abre o index.html rodando no novo servidor
-start msedge "http://localhost:9001"
-:: Abre os outros paineis
-start msedge "http://localhost:8080"
+:: Abre o navegador em tela cheia com as três abas na mesma janela
+start msedge --start-fullscreen "http://localhost:9001" "http://localhost:8080"

@@ -79,7 +79,7 @@ def _children_count(obj) -> int:
         return obj.Children.Count
     except Exception:
         try:
-            return len(_children(obj)) # pyright: ignore[reportArgumentType]
+            return len(_children(obj))  # pyright: ignore[reportArgumentType]
         except Exception:
             return 0
 
@@ -143,7 +143,8 @@ def login_and_open_instalacao(user: str, pwd: str):
     connection = open_connection_by_name(app, CONNECTION_NAME)
     session = get_session_after_open(connection)
 
-    session.findById("wnd[0]").maximize()
+    session.findById("wnd[0]").Iconify()
+    # session.findById("wnd[0]").maximize()
 
     session.findById("wnd[0]/usr/txtRSYST-BNAME").text = user
 
