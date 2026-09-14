@@ -80,7 +80,7 @@
 >>> Abre o arquivo e altere o caminho de execução.
 >>> Para ver a localização do Python instalado na máquina, use:
 >>> where python
->>> ![[Pasted image 20260914125117.png]]
+>>> ![Pasted image 20260914125117.png](https://github.com/Paulo-cesar-Matos/script-leituras-ceneged/blob/064068f05de4e36c6b1305b827fbe33cf3f0fd4b/img-doc/Pasted%20image%2020260914125117.png)
 >>> 
 >>> ![Pasted image 20260914124901.png|551](https://github.com/Paulo-cesar-Matos/script-leituras-ceneged/blob/01ebfd2a0c55c6224f585e7ec9f8e87fecaf22ff/img-doc/Pasted%20image%2020260914124901.png)
 >>>
