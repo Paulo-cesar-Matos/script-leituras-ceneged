@@ -33,8 +33,17 @@ C:\Python314\python.exe extrair_leituras.py
 
 echo.
 echo ========================================
-echo Aguardando 30 segundos para o Windows limpar o SAP da memoria...
-timeout /t 30 /nobreak > nul
+echo [%time%] Limpando a memoria e processos residuais do SAP...
+:: O parametro /F forca o fechamento e o /T mata qualquer processo filho invisivel
+taskkill /F /IM saplogon.exe /T > nul 2>&1
+taskkill /F /IM sapgui.exe /T > nul 2>&1
+:: O sapdp (Data Provider) costuma ser o culpado por travar a memoria COM
+taskkill /F /IM sapdp.exe /T > nul 2>&1
+
+echo.
+echo ========================================
+echo Aguardando 15 segundos para o Windows limpar o SAP da memoria...
+timeout /t 15 /nobreak > nul
 
 echo.
 echo ========================================
