@@ -2,58 +2,70 @@
 echo Iniciando paineis e automacoes...
 
 :: ==========================================
-:: PARTE 1: INICIA OS SERVIDORES E A TELA
+:: INICIA OS SERVIDORES E A TELA (Roda 1 vez)
 :: ==========================================
-
-:: Inicia o servidor proprio para o index.html na porta 9001 minimizado
 start "Servidor Index" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\script-leituras-ceneged && python -m http.server 9001"
-
-:: Inicia o Frontend e Backend minimizados na barra de tarefas
 start "Frontend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\sap-site-builder && npm run dev"
 start "Backend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\operacao-diaria2-backend && python manage.py runserver"
 
-:: Aguarda 5 segundos para dar tempo de os processos iniciarem
 timeout /t 5 /nobreak > nul
-
-:: Abre o navegador em tela cheia com as duas abas na mesma janela
 start msedge --start-fullscreen "http://localhost:9001" "http://localhost:8080"
 
 
 :: ==========================================
-:: PARTE 2: FILA PERFEITA DOS ROBOS (LOOP)
+:: CICLO DOS ROBOS (Loop a cada 30 minutos)
 :: ==========================================
-:: Este terminal vai ficar aberto em segundo plano rodando a fila
-
 :inicio
+
+:: ------------------------------------------
+:: BLOCO 1: EXTRAIR LEITURAS
+:: ------------------------------------------
 echo.
 echo ========================================
+echo [%time%] Limpando processos antigos do SAP...
+taskkill /F /IM saplogon.exe /T > nul 2>&1
+taskkill /F /IM sapgui.exe /T > nul 2>&1
+taskkill /F /IM sapdp.exe /T > nul 2>&1
+timeout /t 3 /nobreak > nul
+
+echo [%time%] Abrindo SAP Logon para Extrair Leituras...
+start "" "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"
+
+echo Aguardando 15 segundos para o SAP carregar...
+timeout /t 15 /nobreak > nul
+
 echo [%time%] Iniciando: Extrair Leituras
 cd C:\Users\paulomatos\Documents\GitHub\script-leituras-ceneged
 C:\Python314\python.exe extrair_leituras.py
 
+
+:: ------------------------------------------
+:: BLOCO 2: LEITURA REPESCAGEM
+:: ------------------------------------------
 echo.
 echo ========================================
-echo [%time%] Limpando a memoria e processos residuais do SAP...
-:: O parametro /F forca o fechamento e o /T mata qualquer processo filho invisivel
+echo [%time%] Limpando processos para a Repescagem...
 taskkill /F /IM saplogon.exe /T > nul 2>&1
 taskkill /F /IM sapgui.exe /T > nul 2>&1
-:: O sapdp (Data Provider) costuma ser o culpado por travar a memoria COM
 taskkill /F /IM sapdp.exe /T > nul 2>&1
+timeout /t 3 /nobreak > nul
 
-echo.
-echo ========================================
-echo Aguardando 15 segundos para o Windows limpar o SAP da memoria...
+echo [%time%] Abrindo SAP Logon para Repescagem...
+start "" "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"
+
+echo Aguardando 15 segundos para o SAP carregar...
 timeout /t 15 /nobreak > nul
 
-echo.
-echo ========================================
 echo [%time%] Iniciando: Leitura Repescagem
 cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario
 C:\Python314\python.exe extracao_leitura_repe.py
 
+
+:: ------------------------------------------
+:: FIM DO CICLO
+:: ------------------------------------------
 echo.
 echo ========================================
-echo [%time%] Rodada concluida! Aguardando 30 minutos...
-:: Espera 1800 segundos (30 min) antes de recomecar
+echo [%time%] Rodada completa finalizada! Aguardando 30 minutos...
 timeout /t 1800 /nobreak
 goto inicio

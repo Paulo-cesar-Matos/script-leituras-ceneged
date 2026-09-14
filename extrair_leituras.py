@@ -4,7 +4,6 @@ import sys
 import subprocess
 from typing import Optional, Iterable
 import win32com.client
-import win32com
 import pyperclip
 import pandas as pd
 import psycopg2
@@ -90,7 +89,7 @@ def _child(obj, idx: int):
         return obj.Children.Item(idx)
 
 
-def _safe_attr(obj, name, default=None): # type: ignore
+def _safe_attr(obj, name, default=None):
     try:
         return getattr(obj, name)
     except Exception:
@@ -98,30 +97,21 @@ def _safe_attr(obj, name, default=None): # type: ignore
 
 
 def get_application():
-    # Tenta pegar a interface do SAP várias vezes (espera até 45 segundos no total)
-    for tentativa in range(15):
-        try:
-            # 1. Tenta encontrar a janela do SAP
-            sap_gui_auto = win32com.client.GetObject("SAPGUI")
-            
-            # 2. Tenta puxar o motor de automação (onde o erro 605 estava ocorrendo)
-            try:
-                app = sap_gui_auto.GetScriptingEngine
-                if app: 
-                    return app
-            except Exception:
-                app = sap_gui_auto.GetScriptingEngine()
-                if app: 
-                    return app
-                
-        except Exception:
-            # Se der qualquer erro em qualquer uma das duas etapas acima, ele ignora e cai no sleep
-            pass 
-
-        print(f"⏳ Aguardando motor interno do SAP (Tentativa {tentativa+1}/15)...")
-        time.sleep(3)
-        
-    raise RuntimeError("O SAP demorou muito para carregar o motor de Scripting ou a tela travou.")
+    sap_gui_auto = win32com.client.GetObject("SAPGUI")
+    try:
+        app = sap_gui_auto.GetScriptingEngine
+        if app:
+            return app
+    except Exception:
+        pass
+    try:
+        app = sap_gui_auto.GetScriptingEngine()
+        if app:
+            return app
+    except Exception:
+        pass
+    ctrl = win32com.client.gencache.EnsureDispatch("Sapgui.ScriptingCtrl.1")
+    return _safe_attr(ctrl, "Application", ctrl)
 
 
 def open_connection_by_name(app, name: str):
@@ -135,7 +125,7 @@ def get_session_after_open(conn) -> object:
     for _ in range(30):
         if _children_count(conn) > 0:
             return _child(conn, SESSION_INDEX)
-        time.sleep(5)
+        time.sleep(0.5)
     raise RuntimeError("A sessão não ficou disponível após abrir a conexão.")
 
 
@@ -151,8 +141,7 @@ def login_and_open_instalacao(user: str, pwd: str):
     connection = open_connection_by_name(app, CONNECTION_NAME)
     session = get_session_after_open(connection)
 
-    session.findById("wnd[0]").Iconify()
-    # session.findById("wnd[0]").maximize()
+    session.findById("wnd[0]").maximize()
 
     session.findById("wnd[0]/usr/txtRSYST-BNAME").text = user
 
@@ -1060,8 +1049,7 @@ if __name__ == "__main__":
         print(f"Erro: {e}")
         encerrar_sap()
 
-"""
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     try:
         print("▶️ Executando a primeira vez imediatamente...")
         rotina_de_extracao()
