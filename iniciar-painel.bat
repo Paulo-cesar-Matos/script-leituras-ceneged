@@ -5,6 +5,7 @@ echo Iniciando paineis e automacoes...
 :: C:\Python314\python.exe -m pip install openpyxl pywin32 pyperclip pandas psycopg2-binary sqlalchemy schedule python-dotenv
 :: instalação extensão edge/chrome
 :: 3-2-1 Revolver - Tab Rotator & Twitch Auto-Reloader
+:: ir em shell:startup e colocar o iniciar-painel.bat
 
 :: Inicia o script de extracao repe minimizado
 start "Leitura Repe" /MIN cmd /k "timeout /t 30 /nobreak > nul && cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario && C:\Python314\python.exe extracao_leitura_repe.py"
