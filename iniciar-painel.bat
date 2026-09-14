@@ -1,49 +1,30 @@
 @echo off
-:: Garante que o terminal rode na mesma pasta onde o .bat está salvo
-cd /d "%~dp0"
+echo Iniciando paineis e automacoes...
 
-:: Nome da pasta e link do seu repositório Git
-set PASTA_PROJETO=Painel_Erros_SAP
-set REPOSITORIO=https://github.com/Paulo-cesar-Matos/script-leituras-ceneged.git
+:: preconfig paineis modulos
+:: C:\Python314\python.exe -m pip install pywin32 pyperclip pandas psycopg2-binary sqlalchemy schedule python-dotenv
 
-:: 1. VERIFICA SE O PROJETO JÁ FOI BAIXADO
-if not exist "%PASTA_PROJETO%\.git" (
-  echo Projeto nao encontrado. Baixando do zero...
-  git clone %REPOSITORIO% "%PASTA_PROJETO%"
-  ) else (
-  echo Atualizando o codigo com as ultimas alteracoes...
-  cd "%PASTA_PROJETO%"
-  git pull origin main
-  cd ..
-)
+:: Inicia o script de extracao repe minimizado
+start "Leitura Repe" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\extrair-para-acomp-diario && C:\Python314\python.exe extracao_leitura_repe.py"
 
-:: 2. ENTRA NA PASTA DO PROJETO PARA EXECUTAR OS ARQUIVOS
-cd "%PASTA_PROJETO%"
+:: Inicia o bot de extrair leituras minimizado
+start "Extrair Leituras" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\script-leituras-ceneged && C:\Python314\python.exe extrair_leituras.py"
 
-:: 3. TRAVA DE SEGURANÇA: VERIFICA AS SENHAS
-if not exist ".env" (
-  echo.
-  echo ==========================================================
-  echo [AVISO] O arquivo .env nao foi encontrado!
-  echo Coloque o arquivo .env
-  echo dentro da pasta "%PASTA_PROJETO%" antes de continuar.
-  echo ==========================================================
-  echo.
-  pause
-  exit
-)
+:: Inicia o servidor proprio para o index.html na porta 9001 minimizado
+start "Servidor Index" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\script-leituras-ceneged && python -m http.server 9001"
 
-:: 4. INICIA O SISTEMA
-echo Iniciando o painel.
-
-:: Inicia o robo do SAP minimizado na barra de tarefas
-start /MIN python extrair_leituras.py
-
-:: Inicia o servidor do painel na porta 9000 de forma invisivel
+:: Inicia o servidor do outro painel na porta 9000 de forma invisivel
 start /B python -m http.server 9000
 
-:: Aguarda 3 segundos para dar tempo de os processos iniciarem
-timeout /t 3 /nobreak > nul
+:: Inicia o Frontend e Backend minimizados na barra de tarefas
+start "Frontend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\sap-site-builder && npm run dev"
+start "Backend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\operacao-diaria2-backend && python manage.py runserver"
 
-:: Abre o navegador Edge em tela cheia (Kiosk) direto no painel
-start msedge --kiosk http://localhost:9000
+:: Aguarda 5 segundos para dar tempo de os processos iniciarem
+timeout /t 5 /nobreak > nul
+
+:: Abre os navegadores com os paineis locais
+:: Abre o index.html rodando no novo servidor
+start msedge "http://localhost:9001"
+:: Abre os outros paineis
+start msedge "http://localhost:8080"
