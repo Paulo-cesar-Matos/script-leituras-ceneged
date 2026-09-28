@@ -70,5 +70,5 @@ C:\Python314\python.exe extracao_leitura_repe.py
 echo.
 echo ========================================
 echo [%time%] Rodada completa finalizada! Aguardando 30 minutos...
-timeout /t 1800 /nobreak
+timeout /t 5 /nobreak
 goto inicio
