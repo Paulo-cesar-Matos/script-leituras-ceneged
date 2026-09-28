@@ -9,8 +9,11 @@ start "Frontend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\sap-site-b
 start "Backend" /MIN cmd /k "cd C:\Users\paulomatos\Documents\GitHub\operacao-diaria2-backend && python manage.py runserver"
 
 timeout /t 5 /nobreak > nul
-start msedge --start-fullscreen "http://localhost:9001" "http://localhost:8080"
+start firefox "http://localhost:9001" "http://localhost:8080"
 
+:: start chrome "http://localhost:9001" "http://localhost:8080"
+:: start msedge --start-fullscreen "http://localhost:9001" "http://localhost:8080"
+:: -kiosk
 
 :: ==========================================
 :: CICLO DOS ROBOS (Loop a cada 30 minutos)
