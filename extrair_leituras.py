@@ -129,6 +129,20 @@ def get_session_after_open(conn) -> object:
     raise RuntimeError("A sessão não ficou disponível após abrir a conexão.")
 
 
+def encontrar_no_arvore_por_texto(tree, texto_procurado):
+    """
+    Percorre a árvore do menu SAP e retorna a chave técnica do nó correspondente ao texto.
+    """
+    chaves = tree.GetAllNodeKeys()
+    for chave in chaves:
+        if tree.GetNodeTextByKey(chave).strip() == texto_procurado:
+            return chave
+
+    raise ValueError(
+        f"Não foi possível encontrar o atalho: '{texto_procurado}' no menu SAP."
+    )
+
+
 # Função principal para login e abertura da instalação
 def login_and_open_instalacao(user: str, pwd: str):
     abrir_sap_logon()
@@ -171,8 +185,10 @@ def abrir_relatorio_leituras(session):
     tree = session.findById(
         "wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell"
     )
-    tree.selectedNode = "F00006"
-    tree.doubleClickNode("F00006")
+    # Substitui a seleção estática pela busca dinâmica do relatório
+    chave_no = encontrar_no_arvore_por_texto(tree, "Extração de Dados Pré-Determinados")
+    tree.selectedNode = chave_no
+    tree.doubleClickNode(chave_no)
 
     session.findById("wnd[0]/usr/ctxtP_REPORT").text = "AQA0SYSTQV000009LEITURAS======"
     session.findById("wnd[0]/tbar[1]/btn[8]").press()
@@ -738,8 +754,10 @@ def busca_endereco(session, df_novos):
                 "wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell"
             )
 
-            shell.selectedNode = "F00002"
-            shell.doubleClickNode("F00002")
+            # Aqui é o lugar correto do Exibir instalação!
+            chave_inst = encontrar_no_arvore_por_texto(shell, "Exibir instalação")
+            shell.selectedNode = chave_inst
+            shell.doubleClickNode(chave_inst)
 
             primeira_consulta = False
 
